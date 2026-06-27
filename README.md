@@ -1,6 +1,6 @@
 # skills
 
-Olle Kruber's personal agent skills, plus a reproducible record of the
+okruber's personal agent skills, plus a reproducible record of the
 third-party skills I consume.
 
 Install everything with the open [`skills`](https://github.com/vercel-labs/skills)

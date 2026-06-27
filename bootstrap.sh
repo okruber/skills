@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Reproduce Olle's skill set on a fresh machine.
+# Reproduce okruber's skill set on a fresh machine.
 #
 # - Consumed third-party skills are installed via the `skills` CLI into the
 #   canonical store (~/.agents/skills) with per-agent symlinks.
