@@ -1,0 +1,7 @@
+{
+  "name": "okruber-skills",
+  "description": "Olle Kruber's personal agent skills.",
+  "skills": [
+    "./skills/jira-ticket-breakdown"
+  ]
+}
