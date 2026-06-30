@@ -45,7 +45,7 @@ deck.html  ───────────▶  http://localhost:PORT  ──�
 3. **Nudge.** User edits in the browser (B-tier capabilities below), clicks **Save**. The overlay sends the patch over a WebSocket; `serve.js` writes `deck.patch.json` beside the source.
 4. **Read.** On the agent's next turn it reads `deck.patch.json` — a small structured diff (`{"title":{"transform":{"x":50,"y":30}}}`) — so it sees *precisely* what was nudged, not a vague "something changed".
 5. **Refine.** Agent folds the nudges into `deck.html` and regenerates. Because `data-eid`s are stable, any not-yet-folded patch entries reattach on reload.
-6. **Bake.** On "finalize", `bake.js` flattens `deck.patch.json` into `deck.html`'s markup and strips overlay hooks → `deck.final.html`, a pristine, portable, self-contained file.
+6. **Bake.** On "finalize", the overlay serializes the live (patched) DOM in the browser minus all injected overlay chrome, and `serve.js` writes `deck.final.html` — a pristine, portable, self-contained file. (Bake runs browser-side, not as a server-side `bake.js`, because the okruber store is zero-dependency: server-side HTML flattening would need a DOM-parser dep. Same behavior, output written by the server.)
 
 ### Why clean-source + sidecar patch
 
@@ -60,9 +60,8 @@ deck.html  ───────────▶  http://localhost:PORT  ──�
 skills/editing-rendered-html/
   SKILL.md       # model-invoked procedure: tag data-eids → serve → read patch → bake
   overlay.css    # edit-mode styling: move grips, resize handles, floating format bar, grid overlay
-  overlay.js     # edit engine + patch capture + Save
-  serve.js       # serve any HTML, inject overlay, write sidecar patch over WS
-  bake.js        # flatten patch.json into markup, strip overlay → final.html
+  overlay.js     # edit engine + patch capture + Save + in-browser bake (serialize patched DOM, strip overlay)
+  serve.js       # serve any HTML, inject overlay, write sidecar patch.json + final.html over WS
 ```
 
 ### `overlay.js` — the edit engine (B-tier, all prototype-verified)
@@ -96,14 +95,13 @@ Keyed by `data-eid`; only changed facets present; empty entries pruned before sa
 
 Serves the target file with `overlay.css`/`overlay.js` injected at serve time; opens a WebSocket; on a patch message writes `<name>.patch.json` beside the source. Auto-started by the skill, auto-stopped on finalize. Models the brainstorm companion's inject-and-watch pattern but purpose-built: serves a real source file and writes a real sidecar.
 
-### `bake.js`
+### Bake (in-browser)
 
-Reads `<name>.html` + `<name>.patch.json`, applies each patch entry into the element's markup (text → text node; transform/size/style → inline style or merged class), strips overlay hooks, writes `<name>.final.html`. Idempotent; absent patch → straight copy.
-
+On finalize the overlay clones the live document, removes every injected node (marked `data-overlay`) and asset (marked `data-erh-asset`), drops `contenteditable` and the temporary positioning marker, and serializes the result. `serve.js` writes it to `<name>.final.html`. Hand-edits are already reflected in the DOM (text nodes + inline styles), so the baked markup is clean and self-contained. Absent edits → a clean copy. Browser-side avoids a server DOM-parser dependency.
 ### `SKILL.md` (model-invoked)
 
 - **Description:** trigger phrasing on two branches — when the agent *generates* an HTML visual/slide/deck, and when the user asks to *edit / move things / nudge* a render. Leading word **nudge**. No workflow summary in the description (per `writing-skills` CSO).
-- **Procedure:** (1) author clean HTML, tag editable elements with stable `data-eid`; (2) serve via `serve.js`, hand the user the URL; (3) on next turn read `<name>.patch.json`, fold nudges into source, regenerate; (4) on finalize run `bake.js`, stop the server, deliver `<name>.final.html`.
+- **Procedure:** (1) author clean HTML, tag editable elements with stable `data-eid`; (2) serve via `serve.js`, hand the user the URL; (3) on next turn read `<name>.patch.json`, fold nudges into source, regenerate; (4) on finalize the user clicks Finalize (overlay bakes, server writes `<name>.final.html`), stop the server, deliver it.
 - Tool-agnostic wording (the repo's store is symlinked across Claude/Codex/Cursor).
 
 ## Invocation model
@@ -121,7 +119,7 @@ Reads `<name>.html` + `<name>.patch.json`, applies each patch entry into the ele
 ## Testing (writing-skills = TDD for skills)
 
 - **Engine:** overlay mechanics smoke-tested headless — move (incl. headers via grip), retype, resize, font-size, align, light color, grid-snap math (`37,19` → `72,48` at step 24), patch round-trip to the session file, and persistence across reload. Ship these as repeatable checks.
-- **bake.js:** unit checks — text/transform/size/style each flatten correctly; overlay fully stripped; orphan eid ignored; no-patch is a clean copy. (Delegated to the Tester agent.)
+- **Bake:** unit checks on the pure helpers + a headless check that the baked file contains the edits and zero overlay artifacts. (Delegated to the Tester agent.)
 - **Skill behavior:** RED baseline — an agent told "make this deck editable" without the skill fails to wire `data-eid`s + serve; GREEN — with the skill it follows the procedure. (Delegated to the Tester agent.)
 
 ## Packaging
