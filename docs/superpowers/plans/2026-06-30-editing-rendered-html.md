@@ -773,20 +773,23 @@ await tab.evaluate(() => {
 await tab.click('#erh-save');                       // Save -> writes patch.json
 await tab.click('#erh-final');                      // Finalize -> writes final.html
 const baked = await tab.evaluate(() => window.__erhBake());
-display({ hasOverlayInBake: /data-overlay|erh-grip|__erh/.test(baked),
-          titleMoved: baked.includes('translate('),
-          retyped: baked.includes('Nudged copy') });
+// catch EVERY editor artifact (classes/vars/attrs), not just overlay nodes
+const A = s => new RegExp(s).test(baked);
+display({
+  anyArtifact: ['data-overlay','erh-grip','__erh/','erh-editing','erh-selected','erh-grid-on','--erh-gridpx','contenteditable','data-erh-pos'].some(A),
+  titleMoved: baked.includes('translate('),
+  retyped: baked.includes('Nudged copy') });
 ```
 
-Expected: `hasOverlayInBake:false`, `titleMoved:true`, `retyped:true`.
+Expected: `anyArtifact:false`, `titleMoved:true`, `retyped:true`. (`data-cmux-*` attributes may appear — those are injected by the cmux test browser, not the overlay, and never appear in a real user's browser.)
 
 - [ ] **Step 4: Assert the sidecar files on disk**
 
 Run: `cat skills/editing-rendered-html/fixtures/sample.patch.json`
 Expected: JSON containing `"title":{"transform":{"x":50,"y":30}}` (snap off → ~50,30) and `"subtitle":{"text":"Nudged copy"}`.
 
-Run: `grep -c 'data-overlay\|erh-grip\|__erh/' skills/editing-rendered-html/fixtures/sample.final.html`
-Expected: `0` (no overlay artifacts in the baked file).
+Run: `grep -c 'data-overlay\|erh-grip\|__erh/\|erh-editing\|erh-selected\|erh-grid-on\|--erh-gridpx\|contenteditable\|data-erh-pos' skills/editing-rendered-html/fixtures/sample.final.html`
+Expected: `0` (no editor artifacts of any kind in the baked file).
 
 - [ ] **Step 5: Stop the server and clean test artifacts**
 
