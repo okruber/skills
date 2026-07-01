@@ -1,6 +1,6 @@
 ---
 name: jira-ticket-breakdown
-description: Use when you have a design spec or implementation plan and want it in Jira — decomposing it into an epic/story/task/sub-task breakdown, proposing tickets for review, or creating them in the AIE project. Triggers include "break this down into Jira tickets", "create an epic and stories from this plan", "turn this spec into Jira issues", "file this into Jira".
+description: Use when you have a design spec, implementation plan, notes, a PRD, or pasted content and want it turned into a Jira issue hierarchy — decomposing it into an epic/story/task/sub-task breakdown, proposing tickets for review, or creating them in Jira. Triggers include "break this down into Jira tickets", "create an epic and stories from this plan", "turn this spec into Jira issues", "file this into Jira", "turn these notes into tickets".
 ---
 
 # Jira Ticket Breakdown
@@ -13,21 +13,22 @@ Core principle: propose the smallest hierarchy that faithfully captures the work
 
 ## When to use
 
-- You have a spec (`…/specs/…-design.md`) or plan (`…/plans/…`) and want Jira tickets from it.
+- You have a spec, plan, notes, a PRD, an existing ticket, or pasted content and want Jira tickets from it.
 - You want an epic/story/sub-task proposal before filing anything.
 
 Not this skill: rewriting one existing ticket's body → use `jira-ticket-rewrite`. This skill *decomposes*; that one *rewrites*.
 
 ## Input resolution
 
-Accept a spec path, a plan path, both, or the current discussion. Detect type by location/shape:
+Accept a spec path, a plan path, pasted notes/PRD/ticket text, or the current discussion. Detect shape, not just file location — a design spec and a pasted PRD play the same role:
 
-- **Spec** → defines the container (usually a **Story**; an Epic only when it spans several independent deliverables or multiple specs/agents) + a first-cut child list.
-- **Plan** → supplies the Task/Sub-task breakdown under the container.
-- **Both** → spec drives the container + rationale; plan drives the tasks.
+- **Spec-like** (design doc, PRD, notes describing what to build and why) → defines the container (usually a **Story**; an Epic only when it spans several independent deliverables or multiple specs/agents) + a first-cut child list.
+- **Plan-like** (ordered implementation steps) → supplies the Task/Sub-task breakdown under the container.
+- **Both** → spec-like drives the container + rationale; plan-like drives the tasks.
 - **One only** → use it for both halves and flag the lower-fidelity half.
+- **Existing ticket(s) pasted in** → treat as the container already decided; extract/refine children from its content.
 
-Target project: **AIE** by default; honor an explicit project key if the user gives one.
+Project/board key is a create-time concern, not a drafting one — the ticket template never references it. Don't ask for it until the create step (see below).
 
 ## Decomposition & conservative bundling
 
@@ -54,9 +55,11 @@ Rules:
 ## Review → create workflow
 
 1. **Propose.** Print the full tree as markdown — for each node: issue type, summary, body (per the template), and parent. Stop here by default.
-2. **Create only on an explicit instruction** (e.g. "create these in AIE"):
-   - Confirm the Atlassian MCP is connected and list its tools; resolve the create/search/metadata tool names (commonly `createJiraIssue`, `searchJiraIssuesUsingJql`, `getJiraProjectIssueTypesMetadata`).
-   - **Search before create:** for each issue, JQL-search the project for an open issue with the same summary, e.g. `project = AIE AND summary ~ "<summary>" AND statusCategory != Done`. If found, skip it and report `already exists (AIE-xxx)`.
+2. **Create only on an explicit instruction** (e.g. "create these", "file this in Jira"):
+   - **Check MCP availability first.** No Atlassian MCP tools resolve at all → say so plainly and stop; the markdown already proposed is the deliverable — the human copy-pastes it into whatever tool they have.
+   - MCP available → confirm connection and list its tools; resolve the create/search/metadata tool names (commonly `createJiraIssue`, `searchJiraIssuesUsingJql`, `getJiraProjectIssueTypesMetadata`).
+   - **Resolve the project/board key**: an explicit key given this turn > one already established earlier in this session > ask. Never assume a default — one Atlassian connection can front many boards.
+   - **Search before create:** for each issue, JQL-search the project for an open issue with the same summary, e.g. `project = <PROJECT_KEY> AND summary ~ "<summary>" AND statusCategory != Done`. If found, skip it and report `already exists (<KEY>-xxx)`.
    - Ask for **one bulk confirmation**, then create in order: Epic → capture its key → Stories linked to the Epic → Sub-tasks with parent = the owning Story. Send bodies with `contentFormat: markdown`.
    - Report created and skipped keys. If writes are denied, say so and output the copy-paste markdown instead.
 
@@ -67,3 +70,4 @@ Rules:
 - **Inventing facts** to fill a section. Omit the section.
 - **Referencing the spec/plan files** in ticket bodies. Tickets must stand alone.
 - **Creating without the review + bulk confirmation.** Propose first, every time.
+- **Assuming a default project/board.** There isn't one — resolve it explicitly at create time, every time.
