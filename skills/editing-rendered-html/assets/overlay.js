@@ -118,7 +118,16 @@
     clone.querySelectorAll('[data-erh-asset]').forEach(function(n){ n.remove() });         // injected css/js
     clone.querySelectorAll('[contenteditable]').forEach(function(n){ n.removeAttribute('contenteditable') });
     clone.querySelectorAll('[data-erh-pos]').forEach(function(n){ n.style.position=''; if(!n.getAttribute('style')) n.removeAttribute('style'); n.removeAttribute('data-erh-pos'); });
-    clone.classList.remove('erh-editing','erh-grid-on');
+    // strip editor-state classes wherever they live (body, selected element, clone itself)
+    var EDIT_CLASSES = ['erh-editing','erh-grid-on','erh-selected'];
+    clone.classList.remove.apply(clone.classList, EDIT_CLASSES);
+    clone.querySelectorAll('.erh-editing,.erh-grid-on,.erh-selected').forEach(function(n){
+      n.classList.remove.apply(n.classList, EDIT_CLASSES);
+      if(!n.getAttribute('class')) n.removeAttribute('class');
+    });
+    // clear the grid CSS var set on <html> during editing
+    clone.style.removeProperty('--erh-gridpx');
+    if(!clone.getAttribute('style')) clone.removeAttribute('style');
     return '<!DOCTYPE html>\n' + clone.outerHTML;
   }
   function doFinalize(){
