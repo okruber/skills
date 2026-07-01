@@ -182,7 +182,7 @@ test('entryToStyle: empty entry -> empty object', () => {
 
 - [ ] **Step 2: Run tests to verify they fail**
 
-Run: `node --test skills/editing-rendered-html/test/`
+Run: `node --test "skills/editing-rendered-html/test/*.test.js"`
 Expected: FAIL — `Cannot find module '../assets/patch-core.js'`.
 
 - [ ] **Step 3: Write the minimal implementation**
@@ -237,7 +237,7 @@ Create `skills/editing-rendered-html/assets/patch-core.js`:
 
 - [ ] **Step 4: Run tests to verify they pass**
 
-Run: `node --test skills/editing-rendered-html/test/`
+Run: `node --test "skills/editing-rendered-html/test/*.test.js"`
 Expected: PASS — 9 tests, 0 failures.
 
 - [ ] **Step 5: Commit**
@@ -739,7 +739,7 @@ The full loop crosses a real browser + server, so it is verified with the browse
 
 - [ ] **Step 1: Run the unit suites together**
 
-Run: `node --test skills/editing-rendered-html/test/`
+Run: `node --test "skills/editing-rendered-html/test/*.test.js"`
 Expected: PASS — patch-core (9) + serve (5) = 14 tests, 0 failures.
 
 - [ ] **Step 2: Start the server on the fixture**
