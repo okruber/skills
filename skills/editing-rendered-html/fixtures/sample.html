@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Sample</title>
+<style>
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#0d1117}
+  .slide{position:relative;width:960px;aspect-ratio:16/9;margin:40px auto;color:#fff;
+    background:linear-gradient(135deg,#1f6feb,#0a3069);border-radius:10px;overflow:hidden}
+  .pad{position:absolute;inset:0;padding:46px 54px}
+  .eyebrow{font-size:13px;letter-spacing:.18em;text-transform:uppercase;opacity:.85;margin:0 0 14px}
+  .title{font-size:46px;line-height:1.05;font-weight:800;margin:0 0 12px;max-width:78%}
+  .subtitle{font-size:18px;line-height:1.4;opacity:.92;margin:0;max-width:62%}
+  .card{position:absolute;right:54px;width:188px;padding:16px;border-radius:12px;
+    background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.22)}
+  #card-a{top:120px} #card-b{top:250px}
+  .card h4{margin:0 0 6px;font-size:15px} .card p{margin:0;font-size:12.5px;opacity:.9}
+</style>
+</head>
+<body>
+  <div class="slide">
+    <div class="pad">
+      <p class="eyebrow" data-eid="eyebrow">Q3 Strategy Review</p>
+      <h1 class="title" data-eid="title">Shipping the last 20% without friction</h1>
+      <p class="subtitle" data-eid="subtitle">Direct manipulation for layout and copy.</p>
+      <div class="card" id="card-a" data-eid="card-a">
+        <h4 data-eid="card-a-h">Direct edit</h4>
+        <p data-eid="card-a-p">Retype text in place.</p>
+      </div>
+      <div class="card" id="card-b" data-eid="card-b">
+        <h4 data-eid="card-b-h">Drag to place</h4>
+        <p data-eid="card-b-p">Nudge by hand.</p>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

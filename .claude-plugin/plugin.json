@@ -2,6 +2,7 @@
   "name": "okruber-skills",
   "description": "okruber's personal agent skills.",
   "skills": [
-    "./skills/jira-ticket-breakdown"
+    "./skills/jira-ticket-breakdown",
+    "./skills/editing-rendered-html"
   ]
 }
