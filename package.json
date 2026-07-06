@@ -1,0 +1,16 @@
+{
+  "name": "okruber-skills",
+  "version": "1.0.0",
+  "description": "okruber's personal agent skills.",
+  "license": "MIT",
+  "repository": "https://github.com/okruber/skills",
+  "keywords": [
+    "pi-package",
+    "skills"
+  ],
+  "pi": {
+    "skills": [
+      "./skills"
+    ]
+  }
+}

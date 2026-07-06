@@ -23,7 +23,9 @@ One physical store — `~/.agents/skills` — serves every agent.
   ~/.claude/skills   ~/.codex/skills    ~/.cursor/skills
 ```
 
-**pi** reads `~/.agents/skills` natively — no per-agent symlink needed.
+**pi** reads `~/.agents/skills` natively — no per-agent symlink needed. This
+repo is also a pi package (`pi` manifest in `package.json`), so a clean pi-only
+machine can skip the store and `pi install git:github.com/okruber/skills`.
 Claude/Codex/Cursor get their per-agent links from `bootstrap.sh`.
 
 ## Reproduce on a new machine
@@ -48,5 +50,7 @@ per their rows in [`consumed.md`](consumed.md).
 ## Add an authored skill
 
 1. Write `skills/<name>/SKILL.md` (follow the `writing-great-skills` skill).
-2. Add `./skills/<name>` to `.claude-plugin/plugin.json`.
+2. Nothing to register — `.claude-plugin/plugin.json` lists skills explicitly,
+   but `package.json`'s `pi` manifest globs `./skills`, so pi picks it up. Keep
+   the plugin.json list current for Claude.
 3. Run `./bootstrap.sh` to link it into the store, then commit.
