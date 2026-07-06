@@ -4,6 +4,7 @@
   "skills": [
     "./skills/jira-ticket-breakdown",
     "./skills/editing-rendered-html",
-    "./skills/vault-to-repo-handoffs"
+    "./skills/vault-to-repo-handoffs",
+    "./skills/obsidian-vault-assistant"
   ]
 }
