@@ -6,8 +6,9 @@
 # - Authored skills (this repo) are symlinked into the canonical store so this
 #   git checkout stays the single source of truth.
 #
-# Claude Code plugins (superpowers, frontend-design) are NOT handled here —
-# restore them with `/plugin` inside Claude Code. See consumed.md.
+# pi packages (superpowers, pi-subagents) are installed here when `pi` is on
+# PATH. Claude Code plugins (superpowers, frontend-design) are NOT handled here
+# — restore them with `/plugin` inside Claude Code. See consumed.md.
 #
 # Usage: ./bootstrap.sh
 set -euo pipefail
@@ -33,5 +34,13 @@ for dir in "$REPO_DIR"/skills/*/; do
   ln -sfn "../../.agents/skills/$name" "$CLAUDE/$name"
   echo "    linked $name"
 done
+
+if command -v pi >/dev/null 2>&1; then
+  echo "==> Installing consumed pi packages"
+  pi install git:github.com/obra/superpowers
+  pi install npm:pi-subagents
+else
+  echo "==> Skipping pi packages (pi not on PATH); see consumed.md"
+fi
 
 echo "==> Done. Verify with: npx skills list -g"

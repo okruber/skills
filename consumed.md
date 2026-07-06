@@ -21,6 +21,22 @@ Notes:
 - `npx skills update <name>` has had a bug ([vercel-labs/skills#915](https://github.com/vercel-labs/skills/issues/915))
   that pulled in unrelated skills — prefer `update -g` (all).
 
+## Via pi packages (canonical: `~/.pi/agent/settings.json`)
+
+Native pi packages — installed with `pi install`, updated with `pi update --all`.
+
+| Package | Provides | Install |
+| --- | --- | --- |
+| `superpowers` | brainstorming, tdd, systematic-debugging, writing-plans, using-git-worktrees, subagent-driven-development, … | `pi install git:github.com/obra/superpowers` |
+| `pi-subagents` | `subagent` tool (chain/parallel/async/forked/resume) — companion superpowers' subagent skills need | `pi install npm:pi-subagents` |
+
+Notes:
+- superpowers ships a `pi` manifest + extension that injects the
+  `using-superpowers` bootstrap at session start and after compaction; skills
+  are scoped to the package, not dumped into `~/.agents/skills`.
+- Without `pi-subagents`, superpowers' subagent skills degrade to sequential
+  execution in the current session.
+
 ## Via Claude Code plugins (marketplace: `anthropics/claude-plugins-official`)
 
 Managed by Claude Code's `/plugin` system, not `npx`. Reproduce inside Claude
@@ -28,5 +44,5 @@ Code, not via `bootstrap.sh`.
 
 | Plugin | Provides | Reproduce |
 | --- | --- | --- |
-| `superpowers` | brainstorming, tdd, systematic-debugging, writing-plans, using-git-worktrees, … | `/plugin install superpowers@claude-plugins-official` |
+| `superpowers` | same as the pi package above (Claude Code uses the plugin, pi uses the package) | `/plugin install superpowers@claude-plugins-official` |
 | `frontend-design` | frontend-design | `/plugin install frontend-design@claude-plugins-official` |

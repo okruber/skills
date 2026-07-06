@@ -1,43 +1,30 @@
 # skills
 
-okruber's personal agent skills, plus a reproducible record of the
+okruber's authored agent skills, plus a reproducible manifest of the
 third-party skills I consume.
 
-Install everything with the open [`skills`](https://github.com/vercel-labs/skills)
-CLI: `npx skills add okruber/skills`.
+## Model
 
-## Two layers
+One physical store — `~/.agents/skills` — serves every agent.
 
-| Layer | Lives in | Managed by | Source of truth |
-| --- | --- | --- | --- |
-| **Authored** — skills I write | `skills/` (this repo, version-controlled) | me, via git | this repo |
-| **Consumed** — third-party skills | nowhere in this repo — only *referenced* | their own tools | upstream repos ([`consumed.md`](consumed.md)) |
-
-Consumed skills are **not vendored**. `consumed.md` records what I pull and the
-exact command to restore it, so a fresh machine is reproducible without me
-maintaining other people's code.
-
-## The canonical store (model-agnostic)
-
-Every agent reads its own skills directory, but all of them point at **one**
-physical store, `~/.agents/skills`. The `skills` CLI writes real files there
-once and symlinks each agent's dir at it — so one copy serves Claude/omp,
-Codex, Cursor, and the rest, and one update refreshes them all.
+- **Authored** skills live in `skills/` (this repo) and are symlinked into the
+  store, so edits here are instantly live everywhere. No reinstall.
+- **Consumed** skills are never vendored. [`consumed.md`](consumed.md) records
+  what I pull and the exact command to restore it.
 
 ```
-  okruber/skills (git)            mattpocock/skills, google/agents-cli, ... (GitHub)
-        |  symlink                       |  npx skills add
-        v                                v
-              ~/.agents/skills/<skill>   <-- single source of truth on disk
-                        |  symlinks
-        +---------------+----------------+
-        v               v                v
-  ~/.claude/skills  ~/.codex/skills  ~/.cursor/skills
+  okruber/skills (git)        mattpocock/skills, google/agents-cli, … (upstream)
+        │ symlink                          │ npx skills add / pi install
+        ▼                                  ▼
+                 ~/.agents/skills/<skill>   ← single source of truth
+                          │ symlinks
+        ┌─────────────────┼──────────────────┐
+        ▼                 ▼                   ▼
+  ~/.claude/skills   ~/.codex/skills    ~/.cursor/skills
 ```
 
-Authored skills sit in the same store as a symlink back to this repo
-(`~/.agents/skills/<name>` -> `skills/<name>`), so edits here are instantly
-live in every agent.
+**pi** reads `~/.agents/skills` natively — no per-agent symlink needed.
+Claude/Codex/Cursor get their per-agent links from `bootstrap.sh`.
 
 ## Reproduce on a new machine
 
@@ -47,20 +34,19 @@ cd ~/Documents/Personal/skills
 ./bootstrap.sh
 ```
 
-`bootstrap.sh` installs every consumed skill via `npx skills` and symlinks the
-authored skills into the canonical store. Claude Code plugins (see
-`consumed.md`) are restored separately with `/plugin`.
+`bootstrap.sh` installs the `npx`-managed consumed skills and links the authored
+ones into the store. Package-based skills (superpowers, etc.) are restored
+per their rows in [`consumed.md`](consumed.md).
 
-## Updating
+## Update
 
-- **Consumed (npx):** `npx skills update -g`
-- **Consumed (Claude plugins):** `/plugin` inside Claude Code
-- **Authored:** edit under `skills/` and commit — changes are live immediately
-  via the symlink; no reinstall.
+- Consumed (npx): `npx skills update -g`
+- Consumed (pi packages): `pi update --all`
+- Consumed (Claude plugins): `/plugin` inside Claude Code
+- Authored: edit under `skills/` and commit — live immediately via the symlink.
 
-## Add a new authored skill
+## Add an authored skill
 
-1. `mkdir -p skills/<name>` and write `skills/<name>/SKILL.md`.
+1. Write `skills/<name>/SKILL.md` (follow the `writing-great-skills` skill).
 2. Add `./skills/<name>` to `.claude-plugin/plugin.json`.
-3. Run `./bootstrap.sh` (or symlink it by hand) to link it into the store.
-4. Commit.
+3. Run `./bootstrap.sh` to link it into the store, then commit.
