@@ -80,7 +80,7 @@ orca terminal wait --terminal <handle> --for tui-idle --timeout-ms 120000 --json
 orca terminal send --terminal <handle> --text "Handoff: read <absolute-brief-path>, propose a plan, and check in before making changes." --enter --json
 ```
 
-Report the created terminal handle back into the task note (`worktree:` field is fine for the pointer). `<agent>` is Olle's launcher (`omp`/`pi`/`claude`/`codex`).
+Report the created terminal handle back into the task note (`worktree:` field is fine for the pointer). `<agent>` defaults to **`pi`** (just another pi session) — use `claude`/`codex` only if the brief calls for it.
 
 Vault writeback after Orca dispatch:
 
