@@ -27,7 +27,7 @@ Vault path, always quoted:
 3. If `last-review` is ≥ 7 days old, offer a weekly review.
 4. Announce changes in one compact line, then answer the user's request.
 
-Use the actual current date. Never silently promote work into `this-week`, `focus`, or `done`.
+Use the actual current date. Never silently promote work into `this-week` or `done`.
 
 ## Daily Task System
 
@@ -36,7 +36,7 @@ Human-facing surfaces:
 | Surface | File | Purpose |
 |---|---|---|
 | Capture | `Inbox.md` | frictionless raw bullets, links, todos; no metadata required |
-| Plan/act | `Task Dashboard.base` | daily surface = `Refine`, `This Week`, `Focus`; plus `Backlog` + `Waiting` admin views for planning reference |
+| Plan/act | `Task Dashboard.base` | daily surface = `Refine`, `This Week`; plus `Backlog` + `Waiting` admin views for planning reference |
 | Rules | `Task System Runbook.md` | lifecycle, triage, dreaming, delegation notes |
 
 `Task Dashboard.base` is the only task surface. The old `Agenda.base` / `Ideas & Knowledge.base` were retired to `Archive/` on 2026-07-07.
@@ -48,7 +48,7 @@ Task notes stay one-note-per-task in `Tasks/` for automation, search, dreaming, 
 Allowed task statuses:
 
 ```text
-refine | backlog | this-week | focus | waiting | done | dropped
+refine | backlog | this-week | waiting | done | dropped
 ```
 
 Meaning:
@@ -57,8 +57,7 @@ Meaning:
 |---|---|---|
 | `refine` | vague, ambiguous, dream output, or needs clarification | assistant may create; Olle chooses next state |
 | `backlog` | real but not committed this week | Olle, or explicit migration/grooming choice |
-| `this-week` | weekly shortlist | Olle only after first migration |
-| `focus` | now/next work pulled from this week | Olle only |
+| `this-week` | the committed now/next shortlist (what Olle is actively working) | Olle only after first migration |
 | `waiting` | blocked or handed off | assistant may set for explicit handoff/blocker |
 | `done` | complete | Olle only |
 | `dropped` | intentionally abandoned | Olle only; assistant may suggest |
@@ -70,7 +69,7 @@ Vague items go to `refine`, not backlog. Backlog is inventory, not a daily surfa
 ```yaml
 type: Task
 title: <short title>
-status: refine | backlog | this-week | focus | waiting | done | dropped
+status: refine | backlog | this-week | waiting | done | dropped
 size: small | bigger
 agent_candidate: false
 created: YYYY-MM-DD
@@ -91,7 +90,7 @@ Small tasks can stay list-like. Bigger human or agent-candidate tasks should inc
 ### Inbox classification
 
 - Raw link/reference → pending ingest recommendation; do not auto-ingest in bulk.
-- Clear task → create a task note, usually `status: refine` unless Olle explicitly chooses `backlog`, `this-week`, or `focus`.
+- Clear task → create a task note, usually `status: refine` unless Olle explicitly chooses `backlog` or `this-week`.
 - Vague task/idea → `status: refine` with open questions.
 - Ambition/reflection → `Wiki/Ambitions & Reflections.md`.
 - Noise → confirm/drop; never delete notes silently.
@@ -154,10 +153,10 @@ Report orphans, broken links, untyped notes, duplicates, and obvious contradicti
 
 | User says | Do |
 |---|---|
-| “What’s on my plate?” | Read `Task Dashboard.base` and summarize `Refine`, `This Week`, `Focus` counts/items |
+| “What’s on my plate?” | Read `Task Dashboard.base` and summarize `Refine`, `This Week` counts/items |
 | “Sweep/tidy inbox” | Classify `Inbox.md`; move filed bullets out of inbox |
 | “Refine this” | Ask clarifying questions; update the task note |
-| “Plan this week” | Work from `This Week`; pull to `Focus` only by Olle choice |
+| “Plan this week” | Browse `Backlog`; pull items into `This Week` only by Olle choice |
 | “Hand this off” | Use `vault-to-repo-handoffs`; write brief |
 | “Ingest/read/save this” | Capture source, then ingest deliberately |
 | “What do I know about X?” | Query `Wiki/` via index and relevant pages |
@@ -169,8 +168,8 @@ Report orphans, broken links, untyped notes, duplicates, and obvious contradicti
 - Quote the vault path.
 - Never delete notes; archive instead.
 - `Inbox.md` capture stays frictionless.
-- `Task Dashboard.base` daily surface = `Refine`, `This Week`, `Focus`; `Backlog` + `Waiting` are admin/reference views for planning, not daily navigation. It is the sole task surface.
-- Only Olle moves tasks into `this-week`, `focus`, `done`, or `dropped`.
+- `Task Dashboard.base` daily surface = `Refine`, `This Week`; `Backlog` + `Waiting` are admin/reference views for planning, not daily navigation. It is the sole task surface.
+- Only Olle moves tasks into `this-week`, `done`, or `dropped`.
 - Assistant may create `refine`, suggest backlog grooming, and set `waiting` for explicit handoffs/blockers.
 - Nothing vague silently becomes backlog.
 - Keep day-to-day tasks separate from the wiki/LLM knowledge track.
