@@ -70,13 +70,14 @@ Use `id:<repoId>` after matching the task's absolute repo path to `orca repo lis
 Vault writeback after Orca dispatch:
 
 ```yaml
-status: waiting
+status: this-week   # or backlog — do NOT invent a status; keep the task's real commitment level
+blocked: "dispatched to Orca session"   # set/append only if the task is now waiting on that session/person; else leave empty
 repo: /absolute/path/to/repo
-handoff: Logs/handoffs/YYYY-MM-DD-<slug>.md
+handoff: "[[YYYY-MM-DD-<slug>]]"
 worktree: <orca-worktree-id>
 ```
 
-If the task note uses a different existing field layout, preserve it and add the same facts without inventing nested `handoff.*` schemas.
+The vault has no `waiting` status — blocking is a flag, not a status. Never change `status` to signal a handoff; leave `status` as the task's true commitment (`this-week`/`backlog`) and use the `blocked:` field for the blocker/owner. If the task note uses a different existing field layout, preserve it and add the same facts without inventing nested `handoff.*` schemas.
 
 Non-Orca repo:
 
@@ -117,7 +118,8 @@ Report files changed, tests run, PR/worktree status, blockers, and vault updates
 | Raw git worktrees for Orca repos | Use `orca worktree create` |
 | Passing a repo path directly as if it were an Orca id | Match `orca repo list --json`, then use `--repo id:<repoId>` |
 | Creating an Orca worktree without prompt/brief | Prompt the agent to read the absolute brief path |
-| Inventing nested vault fields | Write `status: waiting`, `handoff:`, `worktree:`, and `repo:` facts |
+| Inventing nested vault fields | Write `handoff:`, `worktree:`, `repo:` facts; set `blocked:` only if truly waiting |
+| Changing `status` to `waiting` to signal a handoff | No `waiting` status exists; keep real `status`, use the `blocked:` flag |
 | Global superpowers worktree dir | Use `<repo-root>/.worktrees/` for non-Orca |
 | Guessing repo from task title | Ask or require absolute path/id |
 | Letting worker infer acceptance | Put acceptance in the brief |
