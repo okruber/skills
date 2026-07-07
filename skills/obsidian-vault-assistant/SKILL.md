@@ -41,7 +41,12 @@ Human-facing surfaces:
 
 `Task Dashboard.base` is the only task surface. The old `Agenda.base` / `Ideas & Knowledge.base` were retired to `Archive/` on 2026-07-07.
 
-Task notes stay one-note-per-task in `Tasks/` for automation, search, dreaming, and future delegation. **Name each file by its readable title** (e.g. `Tenderdesk — MVP.md`), not a slug — the dashboard shows `file.name` as the clickable link into the note, so the filename *is* the human-facing task name. Strip Obsidian/OS-illegal characters (`\ / : * ? " < > | # ^ [ ]`) from the filename; keep the exact phrasing (with punctuation) in the `title` property.
+Task notes stay one-note-per-task in `Tasks/` for automation, search, dreaming, and future delegation. **Name each file by its readable title** (e.g. `Tenderdesk — MVP.md`), not a slug — the dashboard shows `file.name` as the clickable link into the note, so the filename *is* the human-facing task name. Strip Obsidian/OS-illegal characters (`\ / : * ? " < > | # ^ [ ]`) from the filename (replace `/` with `-`); keep the exact phrasing (with punctuation) in the `title` property.
+
+**Title format: `Prefix — Action phrase`.**
+- **Prefix** = the most-specific named project if one exists, else the domain. Controlled vocabulary: `Arrive` (client work/infra not under a named project), `Builder Platform` (aka Vibe Platform), `Tenderdesk`, `imeto` (own company: partnerships, recruiting, marketing, stakeholders), `Decksmith`, `Research` (personal R&D, tooling, learning, the vault/dreaming system), `Personal` (life admin). Separator is an em-dash ` — ` (colons/pipes are filename-illegal). Add a new prefix only when a project genuinely warrants its own group.
+- **Action phrase**: imperative verb first (`Ask`, `Build`, `Clarify`, `Investigate`, `Set up`, `Reach out`, `Write up`, `Review`, `Draft`, `Decide`, `Adopt`, `Message`), sentence case, no trailing period, ≤ ~70 chars. Turn raw thoughts/questions into an action (`Clarify…`, `Decide whether…`, `Investigate…`).
+- **No metadata in the title.** Timing → `review_after`; blocker/delegation → `blocked`; priority → `size`/`context`; rationale/detail → `context`/`next_action`/`acceptance`. Never bake "after vacation", "pushed to next week", "low priority", "delegated to X" into the name.
 
 ### Lifecycle
 
