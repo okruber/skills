@@ -18,13 +18,15 @@ Do not use for single vault edits, note grooming, or direct Q&A.
 ## Core Rules
 
 1. **Vault session = planner.** Run it from the vault root. Write task notes/briefs; do not do multi-step repo implementation inline.
-2. **Execution session = repo/worktree.** Workers start in the target checkout or worktree, never in the vault.
+2. **You spawn the execution session yourself — do not hand Olle a command to run.** The whole point of a handoff is that the vault session *invokes* the execution session via Orca (`orca worktree create ... --agent` for repo work, or `orca terminal create ... --command "cd <checkout> && <agent>"` for live-machine work), seeds it with the brief, and reports back the created session. Giving Olle a copy-paste `read <brief>` command is an **anti-pattern** — only acceptable when Olle explicitly says he will start it himself. If you catch yourself writing "open a session and run…" for Olle, stop and dispatch it instead.
+3. **Execution session = repo/worktree.** Workers start in the target checkout or worktree, never in the vault.
 3. **Brief before dispatch.** Include repo/path, plan/spec path, acceptance, and return protocol. If the repo is ambiguous, ask or list candidates; do not guess.
 3a. **Propose-first is the default; direct execution is opt-in.** The dispatched session must first produce a short plan/outline and check in with Olle for approval **before** creating final artifacts (agendas, docs, code, PRs). Only run straight through to finished output when Olle explicitly asks for it (“just do it”, “execute”, “autonomous”, “no need to check with me”). Never put “execute it fully” in the dispatch prompt unless direct execution was specified.
 3b. **Task artifacts land on the task, not the Wiki.** A dispatched session's output is **transient** (see the `durable`/`transient` distinction in `obsidian-vault-assistant`), so the dispatch prompt must say where output goes; default is “write the result into the task note.”
 4. **Plans/specs are external.** From inside the target repo, resolve `superpowers-store plans` / `superpowers-store specs`; pass absolute paths. Do not assume repo `docs/` contains plans.
 5. **Orca owns Orca repos.** For Orca-managed repos, resolve the registered Orca repo, then use `orca worktree create` / `orca worktree rm`, not raw `git worktree`.
-6. **Orca handoff default.** If Olle says “handoff to Orca,” create a new Orca worktree under the correct registered repo with an agent prompt pointing at the brief.
+6. **Orca dispatch is the default execution surface** — you spawn it (per Rule 2). For repo work, create a new Orca worktree under the correct registered repo with an agent prompt pointing at the brief. Only fall back to a non-Orca worktree or existing-session handoff when Orca genuinely does not fit.
+6a. **Worktree vs live session.** A worktree isolates a *repo checkout* — use it for repo edits/tests/PRs. For work that mutates **live machine state or global config** (e.g. installing a global CLI/daemon, editing live `~/.pi/agent` symlinked from a config repo), a worktree checkout is the *wrong* isolation because the running system reads the main checkout, not the worktree. Dispatch a **fresh agent session in the real checkout** instead: `orca terminal create --command "cd <checkout> && <agent>" --json`, `orca terminal wait --for tui-idle`, then `orca terminal send` the brief prompt.
 7. **Non-Orca worktrees are repo-local.** Use `<repo-root>/.worktrees/`, ensure it is gitignored, and never use the old global superpowers worktree location.
 
 ## Handoff Brief Contract
@@ -69,6 +71,16 @@ orca worktree create \
 ```
 
 Use `id:<repoId>` after matching the task's absolute repo path to `orca repo list --json`. If no registered repo matches, add it with `orca repo add --path ...` or ask before dispatch. Do not pass a guessed repo selector.
+
+Live-machine / global-config work (fresh agent session in the real checkout — NOT a worktree, per Rule 6a):
+
+```bash
+orca terminal create --title <task-slug> --command "cd /abs/checkout && <agent>" --json
+orca terminal wait --terminal <handle> --for tui-idle --timeout-ms 120000 --json
+orca terminal send --terminal <handle> --text "Handoff: read <absolute-brief-path>, propose a plan, and check in before making changes." --enter --json
+```
+
+Report the created terminal handle back into the task note (`worktree:` field is fine for the pointer). `<agent>` is Olle's launcher (`omp`/`pi`/`claude`/`codex`).
 
 Vault writeback after Orca dispatch:
 
@@ -126,3 +138,5 @@ Non-obvious traps (the inverses of the Core Rules are omitted):
 | Creating an Orca worktree without prompt/brief | Prompt the agent to read the absolute brief path |
 | Global superpowers worktree dir | Use `<repo-root>/.worktrees/` for non-Orca |
 | Reporting only “done” | Include tests, files changed, PR/worktree, and vault updates needed |
+| Handing Olle a copy-paste `read <brief>` command | You spawn the session via Orca yourself (Rule 2); only hand off a command if Olle said he'll start it |
+| Creating a worktree for live-config / global-install work | Use a fresh agent session in the real checkout (Rule 6a) — a worktree checkout is the wrong isolation |
