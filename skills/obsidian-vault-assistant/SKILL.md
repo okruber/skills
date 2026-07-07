@@ -36,7 +36,7 @@ Human-facing surfaces:
 | Surface | File | Purpose |
 |---|---|---|
 | Capture | `Inbox.md` | frictionless raw bullets, links, todos; no metadata required |
-| Plan/act | `Task Dashboard.base` | exactly three views: `Refine`, `This Week`, `Focus` |
+| Plan/act | `Task Dashboard.base` | daily surface = `Refine`, `This Week`, `Focus`; plus `Backlog` + `Waiting` admin views for planning reference |
 | Rules | `Task System Runbook.md` | lifecycle, triage, dreaming, delegation notes |
 
 `Task Dashboard.base` is the only task surface. The old `Agenda.base` / `Ideas & Knowledge.base` were retired to `Archive/` on 2026-07-07.
@@ -167,7 +167,7 @@ Report orphans, broken links, untyped notes, duplicates, and obvious contradicti
 - Quote the vault path.
 - Never delete notes; archive instead.
 - `Inbox.md` capture stays frictionless.
-- `Task Dashboard.base` has only `Refine`, `This Week`, `Focus`; it is the sole task surface.
+- `Task Dashboard.base` daily surface = `Refine`, `This Week`, `Focus`; `Backlog` + `Waiting` are admin/reference views for planning, not daily navigation. It is the sole task surface.
 - Only Olle moves tasks into `this-week`, `focus`, `done`, or `dropped`.
 - Assistant may create `refine`, suggest backlog grooming, and set `waiting` for explicit handoffs/blockers.
 - Nothing vague silently becomes backlog.
