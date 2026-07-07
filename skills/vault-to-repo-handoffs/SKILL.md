@@ -21,7 +21,7 @@ Do not use for single vault edits, note grooming, or direct Q&A.
 2. **Execution session = repo/worktree.** Workers start in the target checkout or worktree, never in the vault.
 3. **Brief before dispatch.** Include repo/path, plan/spec path, acceptance, and return protocol. If the repo is ambiguous, ask or list candidates; do not guess.
 3a. **Propose-first is the default; direct execution is opt-in.** The dispatched session must first produce a short plan/outline and check in with Olle for approval **before** creating final artifacts (agendas, docs, code, PRs). Only run straight through to finished output when Olle explicitly asks for it (“just do it”, “execute”, “autonomous”, “no need to check with me”). Never put “execute it fully” in the dispatch prompt unless direct execution was specified.
-3b. **Task artifacts land on the task, not the Wiki.** Prep, agendas, checklists, and working notes a dispatched session produces are transient task byproducts — write them into the **task note body** (or `Logs/`), never as `Wiki/` pages. `Wiki/` is durable reference only. The dispatch prompt must say where output goes; default is “write the result into the task note.” Only durable understanding distilled from the work belongs in the Wiki, and only on Olle's say-so.
+3b. **Task artifacts land on the task, not the Wiki.** A dispatched session's output is **transient** (see the `durable`/`transient` distinction in `obsidian-vault-assistant`), so the dispatch prompt must say where output goes; default is “write the result into the task note.”
 4. **Plans/specs are external.** From inside the target repo, resolve `superpowers-store plans` / `superpowers-store specs`; pass absolute paths. Do not assume repo `docs/` contains plans.
 5. **Orca owns Orca repos.** For Orca-managed repos, resolve the registered Orca repo, then use `orca worktree create` / `orca worktree rm`, not raw `git worktree`.
 6. **Orca handoff default.** If Olle says “handoff to Orca,” create a new Orca worktree under the correct registered repo with an agent prompt pointing at the brief.
@@ -80,7 +80,7 @@ handoff: "[[YYYY-MM-DD-<slug>]]"
 worktree: <orca-worktree-id>
 ```
 
-The vault has no `waiting` status — blocking is a flag, not a status. Never change `status` to signal a handoff; leave `status` as the task's true commitment (`this-week`/`backlog`) and use the `blocked:` field for the blocker/owner. If the task note uses a different existing field layout, preserve it and add the same facts without inventing nested `handoff.*` schemas.
+The vault has no `waiting` status — `blocked` is a flag, not a status (see `obsidian-vault-assistant`). Leave `status` as the task's true commitment (`this-week`/`backlog`) and use the `blocked:` field for the blocker/owner. If the task note uses a different existing field layout, preserve it and add the same facts without inventing nested `handoff.*` schemas.
 
 Non-Orca repo:
 
@@ -117,18 +117,12 @@ Report files changed, tests run, PR/worktree status, blockers, and vault updates
 
 ## Common Mistakes
 
+Non-obvious traps (the inverses of the Core Rules are omitted):
+
 | Mistake | Correct behavior |
 |---|---|
-| Editing repo files from the vault session | Create a handoff/execution session |
-| Passing `docs/.../plan.md` | Pass absolute `superpowers-store` path |
-| Raw git worktrees for Orca repos | Use `orca worktree create` |
+| Passing `docs/.../plan.md` | Pass absolute `superpowers-store` path — repo `docs/` does not hold plans |
 | Passing a repo path directly as if it were an Orca id | Match `orca repo list --json`, then use `--repo id:<repoId>` |
-| Telling the session to “execute it fully” by default | Default is propose-first; the session checks in before final artifacts unless direct-execution was specified |
-| Writing prep/agendas/checklists into `Wiki/` | Task artifacts go in the task note body (or `Logs/`); `Wiki/` is durable reference only |
 | Creating an Orca worktree without prompt/brief | Prompt the agent to read the absolute brief path |
-| Inventing nested vault fields | Write `handoff:`, `worktree:`, `repo:` facts; set `blocked:` only if truly waiting |
-| Changing `status` to `waiting` to signal a handoff | No `waiting` status exists; keep real `status`, use the `blocked:` flag |
 | Global superpowers worktree dir | Use `<repo-root>/.worktrees/` for non-Orca |
-| Guessing repo from task title | Ask or require absolute path/id |
-| Letting worker infer acceptance | Put acceptance in the brief |
 | Reporting only “done” | Include tests, files changed, PR/worktree, and vault updates needed |
