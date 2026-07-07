@@ -20,6 +20,7 @@ Do not use for single vault edits, note grooming, or direct Q&A.
 1. **Vault session = planner.** Run it from the vault root. Write task notes/briefs; do not do multi-step repo implementation inline.
 2. **Execution session = repo/worktree.** Workers start in the target checkout or worktree, never in the vault.
 3. **Brief before dispatch.** Include repo/path, plan/spec path, acceptance, and return protocol. If the repo is ambiguous, ask or list candidates; do not guess.
+3a. **Propose-first is the default; direct execution is opt-in.** The dispatched session must first produce a short plan/outline and check in with Olle for approval **before** creating final artifacts (agendas, docs, code, PRs). Only run straight through to finished output when Olle explicitly asks for it (“just do it”, “execute”, “autonomous”, “no need to check with me”). Never put “execute it fully” in the dispatch prompt unless direct execution was specified.
 4. **Plans/specs are external.** From inside the target repo, resolve `superpowers-store plans` / `superpowers-store specs`; pass absolute paths. Do not assume repo `docs/` contains plans.
 5. **Orca owns Orca repos.** For Orca-managed repos, resolve the registered Orca repo, then use `orca worktree create` / `orca worktree rm`, not raw `git worktree`.
 6. **Orca handoff default.** If Olle says “handoff to Orca,” create a new Orca worktree under the correct registered repo with an agent prompt pointing at the brief.
@@ -39,6 +40,7 @@ Required fields:
 | Context | Decisions, links, constraints |
 | Acceptance | Observable done condition |
 | Execution mode | Orca worktree, non-Orca worktree, existing repo session, or subagent |
+| Approval mode | `propose-first` (default) or `direct-execution` (only when Olle specified it) |
 | Return protocol | What to report/update back in the vault |
 
 ## Commands
@@ -61,7 +63,7 @@ orca worktree create \
   --repo id:<repoId> \
   --name <task-slug> \
   --agent codex \
-  --prompt "Read <absolute-brief-path>. Execute from this Orca worktree. Acceptance: <observable condition>. Return files changed, tests run, PR/worktree status, blockers, and vault updates needed." \
+  --prompt "Read <absolute-brief-path>. Work from this Orca worktree. Propose a short plan/outline and check in for approval BEFORE producing final artifacts (unless the brief says direct-execution). Acceptance: <observable condition>. Return files changed, tests run, PR/worktree status, blockers, and vault updates needed." \
   --json
 ```
 
@@ -105,6 +107,9 @@ Absolute path and Orca repo id when available.
 ## Execution mode
 Orca worktree under repo id:<repoId>, agent: codex.
 
+## Approval mode
+propose-first (default) — outline a plan and check in for approval before producing final artifacts. Use direct-execution only when Olle specified it.
+
 ## Return protocol
 Report files changed, tests run, PR/worktree status, blockers, and vault updates needed.
 ```
@@ -117,6 +122,7 @@ Report files changed, tests run, PR/worktree status, blockers, and vault updates
 | Passing `docs/.../plan.md` | Pass absolute `superpowers-store` path |
 | Raw git worktrees for Orca repos | Use `orca worktree create` |
 | Passing a repo path directly as if it were an Orca id | Match `orca repo list --json`, then use `--repo id:<repoId>` |
+| Telling the session to “execute it fully” by default | Default is propose-first; the session checks in before final artifacts unless direct-execution was specified |
 | Creating an Orca worktree without prompt/brief | Prompt the agent to read the absolute brief path |
 | Inventing nested vault fields | Write `handoff:`, `worktree:`, `repo:` facts; set `blocked:` only if truly waiting |
 | Changing `status` to `waiting` to signal a handoff | No `waiting` status exists; keep real `status`, use the `blocked:` flag |
