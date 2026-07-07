@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Lint the OEK Vault Knowledge wiki (Karpathy LLM-Wiki rules VI/VIII).
+"""Lint the OEK Vault wiki (Karpathy LLM-Wiki rules VI/VIII).
 
 Reports orphans, broken links, untyped notes, isolated notes, and near-duplicate
 titles. Exits non-zero if any HARD issue (orphan / broken link / untyped) exists.
@@ -15,7 +15,7 @@ VAULT = sys.argv[1] if len(sys.argv) > 1 else os.environ.get("OEK_VAULT", "")
 if not VAULT or not os.path.isdir(VAULT):
     sys.exit('usage: lint.py "<vault-path>"  (or set OEK_VAULT)')
 
-KN = os.path.join(VAULT, "Knowledge")
+KN = os.path.join(VAULT, "Wiki")
 SPECIAL = {"index", "log"}
 LINK_RE = re.compile(r"\[\[([^\]|#]+)")
 TYPE_RE = re.compile(r"#type/\w[\w-]*")
@@ -56,7 +56,7 @@ def show(title, items):
     for it in items:
         print(f"  - {it}")
 
-print(f"Knowledge notes (excl. index/log): {len(notes)}")
+print(f"Wiki notes (excl. index/log): {len(notes)}")
 print(f"Total outbound wikilinks: {sum(len(v) for v in outbound.values())}")
 show("ORPHANS (0 inbound from content pages)", orphans)
 show("BROKEN LINKS", [f"{n} -> [[{l}]]" for n, l in broken])

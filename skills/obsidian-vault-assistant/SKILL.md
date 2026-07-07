@@ -7,7 +7,7 @@ description: Use when managing the OEK Obsidian vault: capture, inbox sweep, tas
 
 ## Overview
 
-The vault session is Olle's personal control tower. Keep day-to-day productivity separate from the wiki/LLM knowledge layer: tasks start from `Inbox.md`, `Task Dashboard.base`, and `Task System Runbook.md`; knowledge work lives under `Sources/` and `Knowledge/`.
+The vault session is Olle's personal control tower. Keep day-to-day productivity separate from the wiki/LLM knowledge layer: tasks start from `Inbox.md`, `Task Dashboard.base`, and `Task System Runbook.md`; knowledge work lives under `Wiki/` (raw captures in `Wiki/Sources/`, curated pages in `Wiki/`).
 
 Vault path, always quoted:
 
@@ -39,7 +39,7 @@ Human-facing surfaces:
 | Plan/act | `Task Dashboard.base` | exactly three views: `Refine`, `This Week`, `Focus` |
 | Rules | `Task System Runbook.md` | lifecycle, triage, dreaming, delegation notes |
 
-Legacy/admin surfaces: `Agenda.base` and `Ideas & Knowledge.base`. Do not use them for daily navigation.
+`Task Dashboard.base` is the only task surface. The old `Agenda.base` / `Ideas & Knowledge.base` were retired to `Archive/` on 2026-07-07.
 
 Task notes stay one-note-per-task in `Tasks/` for automation, search, dreaming, and future delegation.
 
@@ -91,7 +91,7 @@ Small tasks can stay list-like. Bigger human or agent-candidate tasks should inc
 - Raw link/reference → pending ingest recommendation; do not auto-ingest in bulk.
 - Clear task → create a task note, usually `status: refine` unless Olle explicitly chooses `backlog`, `this-week`, or `focus`.
 - Vague task/idea → `status: refine` with open questions.
-- Ambition/reflection → `Ambitions & Reflections.md`.
+- Ambition/reflection → `Wiki/Ambitions & Reflections.md`.
 - Noise → confirm/drop; never delete notes silently.
 
 ## Refinement and Dreaming
@@ -123,19 +123,20 @@ Raw sources are immutable after capture:
 
 | Layer | Path | Owner | Rule |
 |---|---|---|---|
-| Raw sources | `Sources/` | Olle/assistant capture | preserve original material |
-| Wiki | `Knowledge/` | assistant-maintained | summaries, entities, concepts, syntheses |
+| Raw sources | `Wiki/Sources/` | Olle/assistant capture | preserve original material |
+| Wiki | `Wiki/` | assistant-maintained | summaries, entities, concepts, syntheses |
+| Templates | `Wiki/Templates/` | Olle | note/task/daily-note scaffolds |
 | Logs | `Logs/` | assistant-maintained | ingest/query/lint/dream/handoff traces |
 
 A URL is a bookmark until materialized. For source ingest:
 
-1. Capture source into `Sources/` with provenance.
+1. Capture source into `Wiki/Sources/` with provenance.
 2. Discuss/read key takeaways.
-3. Create/update `Knowledge/` pages and bidirectional wikilinks.
-4. Update `index.md` and `log.md` if present.
+3. Create/update `Wiki/` pages and bidirectional wikilinks.
+4. Update `Wiki/index.md` and `Wiki/log.md` if present.
 5. Flag contradictions instead of smoothing them away.
 
-Query flow: read `Knowledge/index.md`, follow only relevant pages, answer with citations, and offer to file durable synthesis back into the wiki.
+Query flow: read `Wiki/index.md`, follow only relevant pages, answer with citations, and offer to file durable synthesis back into the wiki.
 
 ## Lint
 
@@ -157,7 +158,7 @@ Report orphans, broken links, untyped notes, duplicates, and obvious contradicti
 | “Plan this week” | Work from `This Week`; pull to `Focus` only by Olle choice |
 | “Hand this off” | Use `vault-to-repo-handoffs`; write brief |
 | “Ingest/read/save this” | Capture source, then ingest deliberately |
-| “What do I know about X?” | Query `Knowledge/` via index and relevant pages |
+| “What do I know about X?” | Query `Wiki/` via index and relevant pages |
 | “Lint/health check” | Run lint and report |
 | “Run/review a dream” | Surface dream proposals; apply only approved changes |
 
@@ -166,8 +167,7 @@ Report orphans, broken links, untyped notes, duplicates, and obvious contradicti
 - Quote the vault path.
 - Never delete notes; archive instead.
 - `Inbox.md` capture stays frictionless.
-- `Task Dashboard.base` has only `Refine`, `This Week`, `Focus`.
-- `Agenda.base` / `Ideas & Knowledge.base` are legacy/admin only.
+- `Task Dashboard.base` has only `Refine`, `This Week`, `Focus`; it is the sole task surface.
 - Only Olle moves tasks into `this-week`, `focus`, `done`, or `dropped`.
 - Assistant may create `refine`, suggest backlog grooming, and set `waiting` for explicit handoffs/blockers.
 - Nothing vague silently becomes backlog.
