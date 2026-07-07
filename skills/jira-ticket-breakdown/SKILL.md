@@ -33,7 +33,7 @@ Project/board key is a create-time concern, not a drafting one — the ticket te
 ## Decomposition & conservative bundling
 
 1. **Choose the shape by scope — and say why.** Default a single design spec to one **Story** (optionally with Sub-tasks); reserve an **Epic** for an initiative spanning several *independent* deliverables or multiple specs/agents. State the shape and the reason before listing tickets.
-2. **Independence ≠ phasing.** Independent deliverables = different domains/owners/merge boundaries shipping in parallel → Epic + Stories. A v1/v2/v3 rollout of one cohesive subsystem is *phasing*: one Story, committed phase as Definition of Done, later phases as scope/roadmap (or Sub-tasks only if independently assignable). Phasing alone is never an Epic.
+2. **Independence ≠ phasing.** Independent deliverables = different domains/owners/merge boundaries shipping in parallel → Epic + Stories. A v1/v2/v3 rollout of one cohesive subsystem is *phasing*: one Story, committed phase as the Definition of Done list, later phases as scope/roadmap (or Sub-tasks only if independently assignable). Phasing alone is never an Epic.
 3. **Check the zoom level.** Ask whether the spec is the whole initiative or one track of a larger program. If a broader program exists (or the user names one), the Epic lives there and this spec becomes a Story/track under it.
 4. **Bias toward fewer issues.** Fold related small steps into the parent's Definition of Done checklist instead of one Sub-task each. Promote a step to its own issue only when it is independently trackable or assignable (distinct owner, review, merge, or a real dependency boundary). When unsure, bundle — and state the choice so the human can split it later.
 
@@ -42,12 +42,12 @@ Project/board key is a create-time concern, not a drafting one — the ticket te
 Markdown bodies. Include only the sections the level calls for:
 
 - **Epic:** `What` (1 sentence) · `Why` · `Scope` (in / out) · child-story list.
-- **Story:** `What` · `Why` · `Definition of Done` (checklist).
-- **Task / Sub-task:** `What` (1–2 lines) · `Definition of Done` (checklist).
+- **Story:** `What` · `Why` · `Definition of Done` (plain bullet list).
+- **Task / Sub-task:** `What` (1–2 lines) · `Definition of Done` (plain bullet list).
 
 Rules:
 
-- `What` is one sentence, no bullets. `Definition of Done` items are measurable and checkable.
+- `What` is one sentence, no bullets. `Definition of Done` items are plain `-` bullets (never `- [ ]` checkbox syntax) and each is measurable and checkable.
 - `Scope` (in/out) and an optional one-line `Risks` appear only where the source warrants — not on every ticket.
 - **Never** add estimates, labels, assignees, or any link/reference to the spec or plan files.
 - Never invent facts. If the source lacks a section's content, omit the section — do not pad with `N/A`.
@@ -65,7 +65,7 @@ Rules:
 
 ## Common mistakes
 
-- **Over-splitting** — a Sub-task per micro-step floods the board. Bundle into Definition of Done checklists.
+- **Over-splitting** — a Sub-task per micro-step floods the board. Bundle into the Definition of Done list.
 - **Forcing an Epic** — on a small single-change spec, on a phased rollout (v1/v2/v3 of one subsystem → one Story with phased DoD), or on a spec that is really one track under a broader program Epic. Story-root by default.
 - **Inventing facts** to fill a section. Omit the section.
 - **Referencing the spec/plan files** in ticket bodies. Tickets must stand alone.
