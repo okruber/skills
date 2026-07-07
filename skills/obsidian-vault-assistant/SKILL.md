@@ -22,7 +22,7 @@ Vault path, always quoted:
    - classify plain bullets in `Inbox.md`;
    - create/update task notes only when warranted;
    - surface `Logs/dreams/Pending.md` proposals for approval;
-   - flag stale backlog/waiting items for triage;
+   - flag stale backlog/blocked items for triage;
    - update `last-swept`.
 3. If `last-review` is ≥ 7 days old, offer a weekly review.
 4. Announce changes in one compact line, then answer the user's request.
@@ -36,7 +36,7 @@ Human-facing surfaces:
 | Surface | File | Purpose |
 |---|---|---|
 | Capture | `Inbox.md` | frictionless raw bullets, links, todos; no metadata required |
-| Plan/act | `Task Dashboard.base` | daily surface = `Refine`, `This Week`; plus `Backlog` + `Waiting` admin views for planning reference |
+| Plan/act | `Task Dashboard.base` | daily surface = `Refine`, `This Week`; plus a `Backlog` admin view for planning reference |
 | Rules | `Task System Runbook.md` | lifecycle, triage, dreaming, delegation notes |
 
 `Task Dashboard.base` is the only task surface. The old `Agenda.base` / `Ideas & Knowledge.base` were retired to `Archive/` on 2026-07-07.
@@ -48,7 +48,7 @@ Task notes stay one-note-per-task in `Tasks/` for automation, search, dreaming, 
 Allowed task statuses:
 
 ```text
-refine | backlog | this-week | waiting | done | dropped
+refine | backlog | this-week | done | dropped
 ```
 
 Meaning:
@@ -58,9 +58,10 @@ Meaning:
 | `refine` | vague, ambiguous, dream output, or needs clarification | assistant may create; Olle chooses next state |
 | `backlog` | real but not committed this week | Olle, or explicit migration/grooming choice |
 | `this-week` | the committed now/next shortlist (what Olle is actively working) | Olle only after first migration |
-| `waiting` | blocked or handed off | assistant may set for explicit handoff/blocker |
 | `done` | complete | Olle only |
 | `dropped` | intentionally abandoned | Olle only; assistant may suggest |
+
+**Blocked is a flag, not a status.** A committed item that can't move right now keeps its `status` (usually `this-week`) and carries a `blocked:` field naming the blocker/owner (e.g. `blocked: "DNS PR review — separate team"`, `blocked: "delegated to Nikhil"`). Empty `blocked` = active. This keeps blocked-but-committed work visible on This Week instead of hidden in a separate view. The assistant may set/clear `blocked` for explicit handoffs/blockers; it must not change `status` to signal blocking.
 
 Vague items go to `refine`, not backlog. Backlog is inventory, not a daily surface; surface stale backlog items through review/dream recommendations.
 
@@ -69,12 +70,13 @@ Vague items go to `refine`, not backlog. Backlog is inventory, not a daily surfa
 ```yaml
 type: Task
 title: <short title>
-status: refine | backlog | this-week | waiting | done | dropped
+status: refine | backlog | this-week | done | dropped
 size: small | bigger
 agent_candidate: false
 created: YYYY-MM-DD
 last_reviewed:
 review_after:
+blocked:
 repo:
 links:
 context:
@@ -114,7 +116,7 @@ Minimum vault-side action:
 1. Ensure the task note has repo/path/context/acceptance or ask for the missing fields.
 2. Write a brief in `Logs/handoffs/YYYY-MM-DD-<slug>.md`.
 3. Recommend an execution mode: Orca worktree, non-Orca worktree, repo session, or subagent.
-4. Set `status: waiting` only when an explicit external handoff/blocker exists.
+4. Set the `blocked` field (not a status) only when an explicit external handoff/blocker exists; clear it when unblocked.
 
 Future agent delegation target is Orca (`https://www.onorca.dev/`). Do not implement autonomous delegation in this skill.
 
@@ -168,8 +170,8 @@ Report orphans, broken links, untyped notes, duplicates, and obvious contradicti
 - Quote the vault path.
 - Never delete notes; archive instead.
 - `Inbox.md` capture stays frictionless.
-- `Task Dashboard.base` daily surface = `Refine`, `This Week`; `Backlog` + `Waiting` are admin/reference views for planning, not daily navigation. It is the sole task surface.
+- `Task Dashboard.base` daily surface = `Refine`, `This Week`; `Backlog` is an admin/reference view for planning, not daily navigation. It is the sole task surface.
 - Only Olle moves tasks into `this-week`, `done`, or `dropped`.
-- Assistant may create `refine`, suggest backlog grooming, and set `waiting` for explicit handoffs/blockers.
+- Assistant may create `refine`, suggest backlog grooming, and set/clear the `blocked` flag for explicit handoffs/blockers.
 - Nothing vague silently becomes backlog.
 - Keep day-to-day tasks separate from the wiki/LLM knowledge track.
