@@ -136,6 +136,8 @@ Raw sources are immutable after capture:
 | Templates | `Wiki/Templates/` | Olle | note/task/daily-note scaffolds |
 | Logs | `Logs/` | assistant-maintained | ingest/query/lint/dream/handoff traces |
 
+**Wiki is durable reference only — not a bin for task byproducts.** The test: *"in six months, when I ask 'what do I know about X?', do I want this to surface?"* Yes → Wiki. "Only meaningful for this one task/meeting" → it is a **transient task artifact** and belongs **in the task note body** (or `Logs/` for traces), never as a `Wiki/` page. Concretely: meeting agendas, prep, checklists, per-task working notes stay with the Task; durable understanding distilled from the work goes to the Wiki. Wiki pages carry `type/` frontmatter and are listed in `Wiki/index.md`; if a would-be page is dated-and-disposable, it fails both tests — keep it out of `Wiki/`.
+
 A URL is a bookmark until materialized. For source ingest:
 
 1. Capture source into `Wiki/Sources/` with provenance.
@@ -180,3 +182,4 @@ Report orphans, broken links, untyped notes, duplicates, and obvious contradicti
 - Assistant may create `refine`, suggest backlog grooming, and set/clear the `blocked` flag for explicit handoffs/blockers.
 - Nothing vague silently becomes backlog.
 - Keep day-to-day tasks separate from the wiki/LLM knowledge track.
+- Transient task artifacts (agendas, prep, checklists, per-task notes) live in the task note or `Logs/`, never as `Wiki/` pages; `Wiki/` is durable reference only.
