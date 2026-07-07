@@ -86,6 +86,8 @@ acceptance:
 
 Small tasks can stay list-like. Bigger human or agent-candidate tasks should include why/context/links and a useful `next_action`.
 
+**YAML safety:** always double-quote any frontmatter value containing a colon-space (`: `), a leading `#`/`[`/`{`, or wikilinks (e.g. `next_action: "At the check-in: ..."`). Unquoted colons break the whole frontmatter block, which makes Obsidian drop the note's `status` and it silently disappears from every dashboard view.
+
 ### Inbox classification
 
 - Raw link/reference → pending ingest recommendation; do not auto-ingest in bulk.
