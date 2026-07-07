@@ -41,7 +41,7 @@ Human-facing surfaces:
 
 `Task Dashboard.base` is the only task surface. The old `Agenda.base` / `Ideas & Knowledge.base` were retired to `Archive/` on 2026-07-07.
 
-Task notes stay one-note-per-task in `Tasks/` for automation, search, dreaming, and future delegation.
+Task notes stay one-note-per-task in `Tasks/` for automation, search, dreaming, and future delegation. **Name each file by its readable title** (e.g. `Tenderdesk — MVP.md`), not a slug — the dashboard shows `file.name` as the clickable link into the note, so the filename *is* the human-facing task name. Strip Obsidian/OS-illegal characters (`\ / : * ? " < > | # ^ [ ]`) from the filename; keep the exact phrasing (with punctuation) in the `title` property.
 
 ### Lifecycle
 
@@ -85,7 +85,7 @@ next_action:
 acceptance:
 ```
 
-Small tasks can stay list-like. Bigger human or agent-candidate tasks should include why/context/links and a useful `next_action`.
+Small tasks can stay list-like. Bigger human or agent-candidate tasks should include why/context/links and a useful `next_action`. The filename should equal the readable title (see above), not an auto-generated slug.
 
 **YAML safety:** always double-quote any frontmatter value containing a colon-space (`: `), a leading `#`/`[`/`{`, or wikilinks (e.g. `next_action: "At the check-in: ..."`). Unquoted colons break the whole frontmatter block, which makes Obsidian drop the note's `status` and it silently disappears from every dashboard view.
 
