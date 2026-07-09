@@ -75,7 +75,7 @@ Future memory systems (`https://mem0.ai/`, `https://remnic.ai/`) are notes only 
 
 ## Handoffs
 
-The vault session scopes; execution happens elsewhere. For any multi-step repo task, use the `vault-to-repo-handoffs` skill.
+The vault session scopes; execution happens elsewhere. For any multi-step repo task, use the `handoff` skill.
 
 Minimum vault-side action:
 
@@ -108,7 +108,7 @@ Report orphans, broken links, untyped notes, duplicates, and obvious contradicti
 | "Sweep/tidy inbox" | Classify `Inbox.md`; move filed bullets out of inbox |
 | "Refine this" | Ask clarifying questions; update the task note |
 | "Plan this week" | Browse `Backlog`; pull items into `This Week` only by Olle choice |
-| "Hand this off" | Use `vault-to-repo-handoffs`; write brief |
+| "Hand this off" | Use `handoff`; write brief |
 | "Ingest/read/save this" | Capture source, then ingest deliberately (see `KNOWLEDGE.md`) |
 | "What do I know about X?" | Query `Wiki/` via index and relevant pages |
 | "Lint/health check" | Run lint and report |
