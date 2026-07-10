@@ -21,7 +21,7 @@ Concretely: meeting agendas, prep, checklists, and per-task working notes stay w
 
 A URL is a bookmark until materialized.
 
-1. Capture the source into `Wiki/Sources/` with provenance.
+1. Capture the source into `Wiki/Sources/` with provenance. Login-gated, paywalled, or anti-bot pages (X threads, gated articles) → use the `web-capture` skill.
 2. Discuss/read key takeaways.
 3. Create/update `Wiki/` pages and bidirectional wikilinks.
 4. Update `Wiki/index.md` and `Wiki/log.md` if present.

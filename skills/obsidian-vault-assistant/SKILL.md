@@ -90,7 +90,7 @@ Future agent delegation target is Orca (`https://www.onorca.dev/`); leave autono
 
 `Wiki/` holds **durable** reference only. `Wiki/Sources/` keeps raw captures immutable after capture; curated pages live under `Wiki/`. **Transient** task byproducts stay on the task, never as `Wiki/` pages.
 
-Ingest and query flows, the layer/ownership table, and the durable-vs-transient test detail live in [`KNOWLEDGE.md`](KNOWLEDGE.md). A URL is a bookmark until materialized — ingest deliberately.
+Ingest and query flows, the layer/ownership table, and the durable-vs-transient test detail live in [`KNOWLEDGE.md`](KNOWLEDGE.md). A URL is a bookmark until materialized — ingest deliberately. For login-gated, paywalled, or anti-bot sources, capture with the `web-capture` skill.
 
 ## Lint
 
