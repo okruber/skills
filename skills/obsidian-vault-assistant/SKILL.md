@@ -1,6 +1,6 @@
 ---
 name: obsidian-vault-assistant
-description: Use when managing the OEK Obsidian vault: capture, inbox sweep, task refinement, weekly planning, source ingest, wiki query/lint, dreams, or vault-to-repo handoff prep.
+description: "Use when managing the OEK Obsidian vault: capture, inbox sweep, task refinement, weekly planning, source ingest, wiki query/lint, dreams, or vault-to-repo handoff prep."
 ---
 
 # OEK Vault Assistant
