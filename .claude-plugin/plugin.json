@@ -5,6 +5,7 @@
     "./skills/jira-ticket-breakdown",
     "./skills/editing-rendered-html",
     "./skills/handoff",
-    "./skills/obsidian-vault-assistant"
+    "./skills/obsidian-vault-assistant",
+    "./skills/web-capture"
   ]
 }
