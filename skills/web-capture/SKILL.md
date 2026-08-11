@@ -16,6 +16,8 @@ The fix is a **real session**: drive your own Chrome — one you logged into onc
 Capture in this order; stop at the first that returns the full content:
 
 1. **Reader / Nitter first** — the built-in `read` tool (reader-mode; auto-falls back to a Nitter mirror for X) is free and needs no login. It often returns the whole article or thread as clean markdown. Nitter instances are flaky and rate-limited, so this sometimes fails or returns a partial thread.
+
+   Reader services also apply **domain-wide blocks**, not just per-page failures. `r.jina.ai` returns HTTP 403 `AbuseAlleviationError` for all of `x.com` when someone else has tripped its rate limiter, with an explicit unblock timestamp hours away. That is not a fixable request — do not retry or vary the URL, go straight to step 2.
 2. **CDP → real logged-in Chrome** — the robust path when step 1 is down, partial, or the source is gated. This skill's harness. Details below.
 3. **Paste / Web Clipper** — always-available human fallback when automation is unwelcome or the site actively fights step 2.
 
@@ -42,7 +44,15 @@ For X, point the first launch at `https://x.com/i/flow/login`. If the profile is
 node "$HOME/.agents/skills/web-capture/extract.mjs" "<url>"
 ```
 
-The default extraction is generic (title + readable text of `<article>`/`<main>`/`<body>`). The wrapper also reports `loggedOutGuess` and a `signalSample` — read these first: a true `loggedOutGuess` or a "just a moment" / "verify you are human" sample means the profile isn't authenticated for that site (log in, then retry), not that the page is empty.
+The default extraction is generic (title + readable text of `<article>`/`<main>`/`<body>`). The wrapper also reports `loggedOutGuess` and a `signalSample` — read these first, and diagnose before re-running:
+
+| Symptom | Meaning | Fix |
+|---|---|---|
+| `loggedOutGuess: true`, or a "just a moment" / "verify you are human" sample | profile isn't authenticated for that site | log in once in the profile window, retry |
+| empty extraction, `loggedOutGuess: false`, consent copy in `signalSample` | an overlay is blocking render | dismiss it, then poll — see *Consent dialogs* below |
+| partial content (first tweet only, truncated body) | lazy render still in flight | raise `--wait`, or poll in the extraction |
+
+Note that `document.title` is often populated even when the extraction is empty, so a failed capture still tells you the real headline — useful for deciding whether the page is worth a second attempt.
 
 ### 3. Tailor the extraction to the site
 
@@ -78,12 +88,45 @@ X is a JS-heavy SPA behind a login wall: the canonical case. Thread text lives i
 
 A short thread that returns only the first tweet usually needs a longer `--wait` (replies load lazily); bump it to `--wait 6000` and re-run rather than scripting scroll.
 
+### Consent dialogs and other overlays
+
+The example above returns **zero blocks** on an X longform article gated behind a cookie-consent dialog: the overlay suppresses content render, so every selector legitimately misses. The tell is a capture with `loggedOutGuess: false` (you *are* authenticated), empty extraction, and a `signalSample` full of consent copy ("Did someone say … cookies?", "X and its partners use cookies").
+
+Raising `--wait` does not fix this — the dialog never goes away on its own. Dismiss it, then poll. `extract.mjs` awaits a promise, so the extraction can be `async`:
+
+```js
+// scrape.js — robust version: dismiss overlay, then poll for content
+(async () => {
+  const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+  const sel = '[data-testid="longformText"], div[data-testid="articleNoteTweet"], [data-testid="twitterArticleRichTextView"]';
+
+  for (const re of [/^accept all cookies$/i, /^accept all$/i, /^accept$/i]) {
+    const hit = Array.from(document.querySelectorAll('button, [role="button"]'))
+      .find((e) => re.test((e.innerText || '').trim()));
+    if (hit) { hit.click(); break; }
+  }
+  await sleep(2500);
+
+  const grab = () => ({
+    tweets: Array.from(document.querySelectorAll('[data-testid="tweetText"]'))
+      .map((e) => e.innerText.trim()).filter(Boolean),
+    longform: (document.querySelector(sel)?.innerText || '').trim(),
+  });
+
+  let r = grab();
+  for (let i = 0; i < 6 && !r.longform && !r.tweets.length; i++) { await sleep(1500); r = grab(); }
+  return { ...r, longformLen: r.longform.length };
+})()
+```
+
+Accepting once persists in the profile, so this is self-healing for later captures of the same domain. Two habits that save a second round trip: **poll in a loop instead of guessing one `--wait`**, and **return the full text plus its length** rather than a `.slice()` — a truncated capture reads as complete and you only notice the missing tail after writing it somewhere.
+
 ## Per source type
 
 | Source | Extraction |
 |---|---|
 | X thread | tweet blocks via `[data-testid="tweetText"]` (worked example above) |
-| X longform article | `[data-testid="longformText"]` / `articleNoteTweet` container |
+| X longform article | `[data-testid="longformText"]` / `articleNoteTweet` / `twitterArticleRichTextView`; use the async dismiss-and-poll version, since a consent overlay yields zero blocks |
 | Paywalled article | generic pass usually works once logged in; tailor to the article body container if the page wraps content in a reader shell |
 | JS-heavy SPA | inspect for the stable content container, raise `--wait`, then a tailored `--eval-file` |
 
