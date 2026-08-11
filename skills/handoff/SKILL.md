@@ -1,13 +1,15 @@
 ---
 name: handoff
-description: Use when a vault, orchestrator, Obsidian, or planning session needs to hand off or spin off work to a repo, Orca worktree, external execution session, or another agent - especially to spawn a handoff session from a long-running orchestrator without polluting its context.
+description: Use when a vault, orchestrator, Obsidian, or planning session needs to hand off or spin off work to a repo, Orca worktree, external execution session, or another agent - spawning a visible Orca session that does research and implementation while you watch and can interject, not opaque background work.
 ---
 
 # Handoff
 
 ## Overview
 
-The orchestrator (vault or main planning session) is the control tower; execution happens in the target repo, worktree, or spawned session. The handoff brief is the interface between them. When you hand off from a long-running orchestrator, do the handoff-building work off to the side (a forked-context subagent) so the orchestrator's own context stays clean - see Clean Dispatch below.
+The orchestrator (vault or main planning session) is the control tower; execution happens in a **visible spawned session** - an Orca worktree or terminal running an agent - that does research *and* implementation while Olle watches and can interject from the first keystroke. The handoff brief is the interface between them.
+
+A handoff's executor is **always a visible Orca session, never an async/background `subagent`.** A background subagent produces opaque, non-interruptible work and is the exact opposite of a handoff (see Common Mistakes). Keeping the orchestrator's context clean is a *secondary* concern, handled by opt-in Clean Dispatch below - it never replaces the visible working session.
 
 ## When to Use
 
@@ -18,7 +20,7 @@ Do not use for single vault edits, note grooming, or direct Q&A.
 ## Core Rules
 
 1. **Orchestrator = planner.** Run it from the vault root (or the main coordinating session). Write task notes/briefs; do not do multi-step repo implementation inline.
-1a. **Clean dispatch from an orchestrator - keep the parent context clean.** When handing off from a long-running orchestrator/main session (e.g. reviewing the week and spinning off "implement feature X"), do **not** author the brief or run Orca inline - that pollutes the orchestrator with handoff-building context. Instead dispatch a **forked-context subagent** that inherits the orchestrator's context, authors the brief, spawns the Orca session, and returns **only a terse pointer** (worktree/terminal handle + brief path). The orchestrator surfaces that pointer and keeps coordinating, uncluttered. See Clean Dispatch below. (Skip the subagent only for a trivial one-off handoff where inline work adds no meaningful context.)
+1a. **The executor is a visible Orca session Olle can watch - never a background subagent.** When you hand off, spawn a visible Orca session (worktree or terminal, per Rules 6/6a) seeded with the brief, and let *that* session do the research and implementation with Olle watching and free to interject. Do **not** run the work as an async/background `subagent` (`pi-subagents` worker) - that is opaque and non-interruptible, the opposite of what a handoff is for. Clean Dispatch (below) is an *opt-in* way to keep a long-running orchestrator's context clean by having a forked subagent *author the brief and spawn the visible session*; the forked subagent never becomes the executor.
 2. **The handoff gets spawned for you - do not hand Olle a command to run.** The whole point of a handoff is that it is *invoked* via Orca (`orca worktree create ... --agent` for repo work, or `orca terminal create ... --command "cd <checkout> && <agent>"` for live-machine work), seeded with the brief, and the created session reported back. Under Clean Dispatch the forked subagent does this spawning; otherwise the orchestrator does it directly. Giving Olle a copy-paste `read <brief>` command is an **anti-pattern** — only acceptable when Olle explicitly says he will start it himself. If you catch yourself writing "open a session and run…" for Olle, stop and dispatch it instead.
 3. **Execution session = repo/worktree.** Workers start in the target checkout or worktree, never in the vault.
 3. **Brief before dispatch.** Include repo/path, plan/spec path, acceptance, and return protocol. If the repo is ambiguous, ask or list candidates; do not guess.
@@ -26,13 +28,13 @@ Do not use for single vault edits, note grooming, or direct Q&A.
 3b. **Task artifacts land on the task, not the Wiki.** A dispatched session's output is **transient** (see the `durable`/`transient` distinction in `obsidian-vault-assistant`), so the dispatch prompt must say where output goes; default is “write the result into the task note.”
 4. **Plans/specs are external.** From inside the target repo, resolve `superpowers-store plans` / `superpowers-store specs`; pass absolute paths. Do not assume repo `docs/` contains plans.
 5. **Orca owns Orca repos.** For Orca-managed repos, resolve the registered Orca repo, then use `orca worktree create` / `orca worktree rm`, not raw `git worktree`.
-6. **Orca dispatch is the default execution surface** — you spawn it (per Rule 2). For repo work, create a new Orca worktree under the correct registered repo with an agent prompt pointing at the brief. Only fall back to a non-Orca worktree or existing-session handoff when Orca genuinely does not fit.
+6. **Orca dispatch is the default execution surface** — you spawn it (per Rule 2). For repo work, create a new Orca worktree under the correct registered repo with an agent prompt pointing at the brief. **Detect Orca robustly** — never conclude it is unavailable from `command -v orca` alone: the `/usr/local/bin/orca` shim is frequently a dangling AppTranslocation symlink even while Orca is installed and running. Probe `orca status --json`, and if the shim is missing use the app-bundle binary `/Applications/Orca.app/Contents/Resources/bin/orca` (see Detecting Orca). Only when the app itself is absent is Orca genuinely unavailable — and even then the fallback is another *visible* session (non-Orca worktree, or ask Olle), never a background subagent.
 6a. **Worktree vs live session.** A worktree isolates a *repo checkout* — use it for repo edits/tests/PRs. For work that mutates **live machine state or global config** (e.g. installing a global CLI/daemon, editing live `~/.pi/agent` symlinked from a config repo), a worktree checkout is the *wrong* isolation because the running system reads the main checkout, not the worktree. Dispatch a **fresh agent session in the real checkout** instead: `orca terminal create --command "cd <checkout> && <agent>" --json`, `orca terminal wait --for tui-idle`, then `orca terminal send` the brief prompt.
 7. **Non-Orca worktrees are repo-local.** Use `<repo-root>/.worktrees/`, ensure it is gitignored, and never use the old global superpowers worktree location.
 
 ## Clean Dispatch (orchestrator hygiene)
 
-Use this whenever the handoff originates from a long-running orchestrator/main session and you want the parent to stay uncluttered. The forked subagent does all the handoff-building work; the parent only sees the returned pointer.
+**Opt-in, secondary.** Use this only when the handoff originates from a long-running orchestrator/main session and keeping the parent uncluttered is worth the indirection. It does **not** change the executor: the forked subagent only *authors the brief and spawns the visible Orca session*, then returns a pointer. The forked subagent must never execute the work itself or spawn an async/background worker as the executor. If Olle is actively watching and wants to see the handoff happen, skip Clean Dispatch and spawn the visible session directly.
 
 Dispatch a **forked-context** subagent (via the `pi-subagents` / `subagent` tool) with a task like:
 
@@ -43,6 +45,7 @@ Rules for clean dispatch:
 - The subagent is the one that runs `orca ...` and writes files - that keeps those tool calls out of the parent transcript.
 - The parent's only new context is the subagent call + its terse result. Surface that pointer to Olle and continue coordinating.
 - The spawned execution session still follows every rule below (brief contract, propose-first default, worktree-vs-live 6a, vault writeback).
+- The forked subagent's job **ends** at authoring the brief and spawning the visible session. It never runs the implementation and never becomes an async executor.
 
 ## Handoff Brief Contract
 
@@ -70,6 +73,18 @@ cd "/absolute/path/to/repo"
 plan_dir="$(superpowers-store plans)"
 spec_dir="$(superpowers-store specs)"
 ```
+
+Detecting Orca (do this before choosing the execution surface):
+
+```bash
+# `command -v orca` is unreliable — the /usr/local/bin/orca shim is often a
+# dangling AppTranslocation symlink while Orca is installed and running.
+orca="$(command -v orca || true)"
+[ -x "$orca" ] || orca="/Applications/Orca.app/Contents/Resources/bin/orca"
+"$orca" status --json   # app running => Orca is available; spawn a VISIBLE session
+```
+
+If `orca status` reports the app running, Orca is available regardless of the shim. If the app-bundle binary is missing too, Orca is genuinely absent — fall back to another *visible* session, never a background subagent.
 
 Orca-managed repo:
 
@@ -155,3 +170,5 @@ Non-obvious traps (the inverses of the Core Rules are omitted):
 | Reporting only “done” | Include tests, files changed, PR/worktree, and vault updates needed |
 | Handing Olle a copy-paste `read <brief>` command | You spawn the session via Orca yourself (Rule 2); only hand off a command if Olle said he'll start it |
 | Creating a worktree for live-config / global-install work | Use a fresh agent session in the real checkout (Rule 6a) — a worktree checkout is the wrong isolation |
+| Running the handoff as an async/background `subagent` | The executor is always a **visible** Orca session Olle can watch and interject in; a background subagent is opaque and non-interruptible (Rule 1a) |
+| Concluding Orca is unavailable because `command -v orca` is empty | The `/usr/local/bin/orca` shim can dangle (AppTranslocation); probe `orca status --json` / use the app-bundle binary before any fallback (Rule 6, Detecting Orca) |
