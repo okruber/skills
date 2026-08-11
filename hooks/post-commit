@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+# Auto-register authored skills after every commit so a newly added or renamed
+# skill is immediately discoverable (canonical store + Claude mirror), and stale
+# links from renames/removals are pruned. Installed by bootstrap.sh.
+set -euo pipefail
+REPO_DIR="$(git rev-parse --show-toplevel 2>/dev/null)" || exit 0
+[ -x "$REPO_DIR/bootstrap.sh" ] || exit 0
+"$REPO_DIR/bootstrap.sh" --links-only >/dev/null 2>&1 || true

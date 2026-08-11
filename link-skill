@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+# Register authored skill(s) into the canonical store (~/.agents/skills) and the
+# Claude mirror (~/.claude/skills). Fast alternative to a full ./bootstrap.sh.
+#
+# Usage:
+#   ./link-skill            register all authored skills (delegates to bootstrap --links-only)
+#   ./link-skill <name>     register one skill by directory name
+set -euo pipefail
+
+REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+CANON="$HOME/.agents/skills"
+CLAUDE="$HOME/.claude/skills"
+name="${1:-}"
+
+if [ -z "$name" ]; then
+  exec "$REPO_DIR/bootstrap.sh" --links-only
+fi
+
+[ -d "$REPO_DIR/skills/$name" ] || { echo "no such authored skill: $name" >&2; exit 1; }
+mkdir -p "$CANON" "$CLAUDE"
+ln -sfn "$REPO_DIR/skills/$name" "$CANON/$name"
+ln -sfn "../../.agents/skills/$name" "$CLAUDE/$name"
+echo "linked $name -> $CANON/$name (+ claude mirror)"

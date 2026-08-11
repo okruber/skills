@@ -30,8 +30,20 @@ see `README.md` for the layout and `consumed.md` for third-party references.
 ## After adding a new skill
 
 1. Add `./skills/<name>` to `.claude-plugin/plugin.json`.
-2. Run `./bootstrap.sh` to symlink it into the canonical store.
-3. Commit.
+2. Commit. The repo's `post-commit` hook auto-registers the skill (symlinks it
+   into `~/.agents/skills` + `~/.claude/skills` and prunes stale links).
+
+If the hook is not installed (fresh clone before `./bootstrap.sh`), register
+manually with the fast path — **not** a full `./bootstrap.sh`, which reinstalls
+all consumed skills over the network:
+
+```bash
+./link-skill <name>     # one skill
+./link-skill            # all authored skills (idempotent; repairs drift)
+```
+
+A skill that is authored but never linked is invisible to every agent — this
+step is what makes it discoverable.
 
 ## Notes
 
