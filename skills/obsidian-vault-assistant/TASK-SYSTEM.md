@@ -19,7 +19,7 @@ type: Task
 title: <short title>
 status: refine | backlog | this-week | done | dropped
 size: small | bigger
-agent_candidate: false
+completed: false
 created: YYYY-MM-DD
 last_reviewed:
 review_after:
@@ -47,3 +47,21 @@ Small tasks can stay list-like. Bigger human or agent-candidate tasks should inc
 | `dropped` | intentionally abandoned | Olle only; assistant may suggest |
 
 `blocked` is a flag, not a status — see the Lifecycle section in `SKILL.md`.
+
+## `completed` — the closure inbox
+
+`completed` is a checkbox, not a status. `status` stays the single source of truth for the lifecycle.
+
+It exists because Olle often finishes work outside the dialogue, especially personal errands, and the note never gets updated. Editing `status` inline is not a safe alternative: `status` is untyped (freetext) and every dashboard filter is an exact string match, so one typo removes a note from every view. A checkbox has two states and cannot be mistyped.
+
+The loop:
+
+1. Olle ticks `completed` in `Task Dashboard.base`. A global `completed != true` filter hides the row immediately.
+2. The assistant reconciles it on the next sweep: set `status: done`.
+3. **Never untick it.** The flag moves one way only, so the end state is `completed: true` with `status: done` and the two agree.
+
+**Invariant:** `status: done` if and only if `completed: true`.
+
+A tick means "I finished this". It cannot express `dropped`, because dropping is a decision and finishing is a fact — drops stay a conversation. Keep `completed` registered as `checkbox` in `.obsidian/types.json`, or the freetext problem returns.
+
+Replaced `agent_candidate` on 2026-08-13. That field drove no view filter and was display-only; judge agent suitability from the task itself instead.
