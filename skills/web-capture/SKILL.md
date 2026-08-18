@@ -1,6 +1,11 @@
 ---
 name: web-capture
-description: Use when capturing content from a login-gated, paywalled, or anti-bot-protected page — X/Twitter threads, gated articles, JS-heavy SPAs — that returns a login wall, partial text, or empty content to ordinary fetching (read/reader-mode/headless). Drives your own already-logged-in Chrome over CDP so the site serves the page to a genuine human session. Triggers: "capture this X thread", "read this paywalled/gated page", "the fetch just returns a login wall".
+description: |
+  Use when capturing content from a login-gated, paywalled, or anti-bot-protected page — X/Twitter threads, gated articles, JS-heavy SPAs — that returns a login wall, partial text, or empty content to ordinary fetching (read/reader-mode/headless). Drives your own already-logged-in Chrome over CDP so the site serves the page to a genuine human session.
+triggers:
+  - "capture this X thread"
+  - "read this paywalled/gated page"
+  - "the fetch just returns a login wall"
 ---
 
 # web-capture
