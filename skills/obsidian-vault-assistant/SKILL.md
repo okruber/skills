@@ -23,14 +23,15 @@ Vault path, always quoted (this is the working directory for every vault action)
 ## Start of Any Vault Conversation
 
 1. Read `.pi/memory.md`.
-2. If `last-swept` is not today, run the ambient sweep in this order:
+2. **Report the Due count and offer to run it.** Due = open task notes whose `review_after` has arrived. It is the first line of every vault session, before anything else. Empty means healthy; a number means that many items are waiting for a verdict.
+3. If `last-swept` is not today, run the ambient sweep in this order:
    - classify plain bullets in `Inbox.md` (see Inbox classification);
-   - create/update task notes only when warranted;
+   - create/update task notes only when warranted, each with a `review_after` date;
    - surface `Logs/dreams/Pending.md` proposals for approval;
-   - flag stale backlog/blocked items for triage;
    - update `last-swept`.
-3. If `last-review` is ≥ 7 days old, offer a weekly review.
-4. Announce changes in one compact line, then answer the user's request.
+4. Announce changes in one compact line **carrying both numbers, intake and closures** ("filed 5, closed 0" is a legitimate report; omitting the second number is not).
+
+Do not use a calendar signal to trigger a review. "Last review was N days ago" failed through a four-week vacation, because it only reports what was missed. The Due queue is state-based: time away makes it longer, never overdue in a way that can be missed.
 
 Use the actual current date.
 
@@ -41,6 +42,7 @@ Human-facing surfaces:
 | Surface | File | Purpose |
 |---|---|---|
 | Capture | `Inbox.md` | frictionless raw bullets, links, todos; no metadata required |
+| Triage | `Task Dashboard.base` → `Due` | items whose `review_after` has arrived, oldest first. Empty = healthy. The only surface that removes things from the system |
 | Plan/act | `Task Dashboard.base` | the sole task surface. Daily view = `Refine`, `This Week`; `Backlog` is an admin/reference view for planning, not daily navigation |
 | Rules | `Task System Runbook.md` | lifecycle, triage, dreaming, delegation notes |
 
@@ -49,6 +51,10 @@ Task notes stay one-note-per-task in `Tasks/` for automation, search, dreaming, 
 ### Lifecycle
 
 Statuses: `refine | backlog | this-week | done | dropped`.
+
+**Every open note carries a `review_after` date.** Required on `refine`, `backlog`, and `this-week`; defaults are +7 days for refine and +30 for backlog. It is the only mechanism that returns an item to attention, and without it items rot silently. Registered as `date` in `.obsidian/types.json`, so keep it typed or the Due view stops matching.
+
+**An item that surfaces in Due leaves with one of five verdicts:** act (`this-week`), delegate (handoff brief), question (stays `refine`, with the specific question written into the note), park (new `review_after` **and** a one-line reason), or close (`done`/`dropped`). "Read it and moved on" is not a verdict. The same park reason twice means propose the drop.
 
 - **Only Olle** moves a task into `this-week`, `done`, or `dropped`.
 - The **assistant** may create `refine` notes and suggest backlog grooming or drops.
@@ -111,7 +117,8 @@ Report orphans, broken links, untyped notes, duplicates, and obvious contradicti
 | "Hand this off" | Use `handoff`; write brief |
 | "Ingest/read/save this" | Capture source, then ingest deliberately (see `KNOWLEDGE.md`) |
 | "What do I know about X?" | Query `Wiki/` via index and relevant pages |
-| "Lint/health check" | Run lint and report |
+| "Lint/health check" | Run lint and report. Also report status counts, never-reviewed items, and items past `review_after` |
+| "What's due?" | List the Due queue oldest first; take each item to one of the five verdicts |
 | "Run/review a dream" | Surface dream proposals; apply only approved changes |
 
 ## Hard Rules

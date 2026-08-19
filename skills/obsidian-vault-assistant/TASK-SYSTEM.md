@@ -22,7 +22,7 @@ size: small | bigger
 completed: false
 created: YYYY-MM-DD
 last_reviewed:
-review_after:
+review_after: YYYY-MM-DD   # required while open
 blocked:
 repo:
 links:
@@ -31,6 +31,8 @@ outcome:
 next_action:
 acceptance:
 ```
+
+`agent_candidate` was retired on 2026-08-13 and must not be added to new notes. Judge agent suitability from the task itself.
 
 Small tasks can stay list-like. Bigger human or agent-candidate tasks should include why/context/links and a useful `next_action`.
 
@@ -47,6 +49,16 @@ Small tasks can stay list-like. Bigger human or agent-candidate tasks should inc
 | `dropped` | intentionally abandoned | Olle only; assistant may suggest |
 
 `blocked` is a flag, not a status — see the Lifecycle section in `SKILL.md`.
+
+## `review_after` — the surface date
+
+Required on every open note (`refine`, `backlog`, `this-week`). Defaults on creation: refine +7 days, backlog +30.
+
+It drives the **Due** view in `Task Dashboard.base` (`review_after && review_after <= today()`), which is the queue the assistant reports at the start of every vault session. Nothing else returns an item to attention, so a note without a date is a note that can rot untouched. That is not hypothetical: on 2026-08-19, 74 of 79 open notes had no date and 12 had never been reviewed since June.
+
+Keep it registered as `date` in `.obsidian/types.json`. Untyped, Obsidian treats it as freetext and the date comparison silently matches nothing — the same failure mode `completed` was protected from.
+
+**Clearing an item from Due means giving it one of five verdicts:** act, delegate, question, park, or close. Park requires a new date *and* a one-line reason. The same reason twice is the signal to propose a drop.
 
 ## `completed` — the closure inbox
 
