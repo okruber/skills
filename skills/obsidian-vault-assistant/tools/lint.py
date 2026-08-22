@@ -16,6 +16,7 @@ if not VAULT or not os.path.isdir(VAULT):
     sys.exit('usage: lint.py "<vault-path>"  (or set OEK_VAULT)')
 
 KN = os.path.join(VAULT, "Wiki")
+TASKS = os.path.join(VAULT, "Tasks")
 SPECIAL = {"index", "log"}
 LINK_RE = re.compile(r"\[\[([^\]|#]+)")
 TYPE_RE = re.compile(r"#type/\w[\w-]*")
@@ -25,6 +26,15 @@ for f in sorted(glob.glob(os.path.join(KN, "*.md"))):
     name = os.path.splitext(os.path.basename(f))[0]
     if name.lower() not in SPECIAL:
         notes[name] = f
+
+# Tasks/ notes are valid wikilink targets but not Wiki content pages: they are
+# excluded from orphan/untyped/dupe analysis, only used to resolve broken links.
+task_notes = {}
+for f in sorted(glob.glob(os.path.join(TASKS, "*.md"))):
+    name = os.path.splitext(os.path.basename(f))[0]
+    task_notes[name] = f
+
+link_targets = set(notes) | set(task_notes)
 
 outbound = {n: [] for n in notes}
 inbound = {n: 0 for n in notes}
@@ -38,7 +48,7 @@ for n, f in notes.items():
         outbound[n].append(l)
         if l in inbound:
             inbound[l] += 1
-        elif l not in notes:
+        elif l not in link_targets:
             broken.append((n, l))
 
 orphans = [n for n in notes if inbound[n] == 0]

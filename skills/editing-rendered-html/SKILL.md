@@ -40,7 +40,7 @@ Not this skill: editing the agent's own structure/logic (that stays your job); e
 
 ## Capabilities (what the user can do in the browser)
 
-move · retype · resize · font-size · align · light-color · grid-snap toggle · **annotate** (A + click leaves a note for the agent) · deck slide switching (◄ ► / arrow keys, auto-save). Grid snap is an editor preference (per-browser), not part of the patch.
+move · retype · resize · font-size · align · light-color · grid-snap toggle · **annotate** (A + click leaves a note for the agent; pending notes show a green ✎ badge on the element — click the badge to edit or delete a note) · deck slide switching (◄ ► / arrow keys, auto-save). Notes sync to the server the moment you press Enter; no separate Save needed. Grid snap is an editor preference (per-browser), not part of the patch.
 
 ## Common mistakes
 

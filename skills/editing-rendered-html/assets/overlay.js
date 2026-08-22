@@ -71,7 +71,8 @@
     rsz.addEventListener('pointerup', function(e){ if(!on) return; on=false; rsz.releasePointerCapture(e.pointerId);
       if(moved){ recordOp(node.dataset.eid, 'size', { size: (patch[node.dataset.eid]||{}).size }); saveLocal(); } });
   }
-  function wireSelect(node){ node.addEventListener('click', function(e){ if(!editing) return; if(e.target.classList.contains('erh-grip')||e.target.classList.contains('erh-rsz')) return;
+  function wireSelect(node){ node.addEventListener('click', function(e){ if(!editing) return;
+    if(e.target.classList.contains('erh-grip')||e.target.classList.contains('erh-rsz')||e.target.classList.contains('erh-note-badge')) return;
     if(annotating){ openNote(node); return; } select(node); }); }
   function placeBar(node){ var r=node.getBoundingClientRect(); var top=r.top-46; if(top<8) top=r.bottom+10; fmt.style.left=Math.max(8,Math.min(window.innerWidth-260,r.left))+'px'; fmt.style.top=top+'px'; }
   function select(node){ if(sel) sel.classList.remove('erh-selected'); sel=node; node.classList.add('erh-selected'); fmt.classList.add('show'); placeBar(node);
@@ -157,23 +158,48 @@
     else { flash('No server: copy not supported for finalize'); }
   }
 
-  // ---- annotation mode (press A while editing, click an element, type a note for the agent) ----
+  // ---- annotation mode (A while editing, click an element, type a note for the agent) ----
+  // Pending notes are visible as ✎ badges (edit/annotate modes only); clicking
+  // a badge reopens the editor even outside annotate mode.
+  function refreshBadges(){
+    document.querySelectorAll('.erh-note-badge').forEach(function(b){ b.remove(); });
+    Object.keys(hist).forEach(function(eid){
+      var note = PC.lastNote(hist, eid); if(note == null) return;
+      var n = document.querySelector('[data-eid="' + eid + '"]'); if(!n) return;
+      var b = document.createElement('span'); b.className = 'erh-note-badge';
+      b.setAttribute('data-overlay','1'); b.setAttribute('contenteditable','false');
+      b.title = note; b.textContent = '\u270E';
+      b.addEventListener('click', function(e){ e.stopPropagation(); if(!editing) setEditing(true); openNote(n); });
+      n.appendChild(b);
+    });
+  }
   var noteBox = null;
   function openNote(node){
     closeNote();
+    var eid = node.dataset.eid;
+    var existing = PC.lastNote(hist, eid);
     noteBox = document.createElement('div'); noteBox.id = 'erh-note'; noteBox.setAttribute('data-overlay','1');
-    noteBox.innerHTML = '<textarea placeholder="Note for the agent\u2026"></textarea><div class="erh-note-hint">Enter save \u00b7 Esc cancel</div>';
+    noteBox.innerHTML = '<textarea placeholder="Note for the agent\u2026"></textarea>'
+      + '<div class="erh-note-hint"><button type="button" class="erh-note-del">Delete</button>Enter save \u00b7 Esc cancel</div>';
     document.body.appendChild(noteBox);
     var r = node.getBoundingClientRect();
     noteBox.style.left = Math.max(8, Math.min(window.innerWidth - 280, r.left)) + 'px';
     noteBox.style.top = Math.min(window.innerHeight - 120, r.bottom + 8) + 'px';
-    var ta = noteBox.querySelector('textarea'); ta.focus();
+    var ta = noteBox.querySelector('textarea');
+    var del = noteBox.querySelector('.erh-note-del');
+    if(existing != null) ta.value = existing; else del.style.display = 'none';
+    ta.focus();
+    del.addEventListener('click', function(){
+      PC.removeNotes(hist, eid); saveLocal(); doSave(); closeNote(); refreshBadges(); flash('Note deleted');
+    });
     ta.addEventListener('keydown', function(e){
       e.stopPropagation();
       if(e.key === 'Enter' && !e.shiftKey){ e.preventDefault();
         var v = ta.value.trim();
-        if(v){ recordOp(node.dataset.eid, 'note', { note: v }); saveLocal(); flash('Note saved \u2713'); }
-        closeNote();
+        if(v && v !== existing){ recordOp(eid, 'note', { note: v }); }
+        else if(!v && existing){ PC.removeNotes(hist, eid); }
+        else { closeNote(); return; }
+        saveLocal(); doSave(); closeNote(); refreshBadges(); flash(v ? 'Note saved \u2713' : 'Note deleted');
       }
       if(e.key === 'Escape') closeNote();
     });
@@ -207,7 +233,7 @@
   });
   document.addEventListener('click', function(e){ if(!editing) return; if(!e.target.closest('[data-eid]') && !e.target.closest('#erh-fmt') && !e.target.closest('#erh-bar')) deselect(); });
 
-  function boot(){ buildChrome(); buildNav(); decorate(); applyAll(); applyGrid(); setEditing(false); }
+  function boot(){ buildChrome(); buildNav(); decorate(); applyAll(); applyGrid(); refreshBadges(); setEditing(false); }
   if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot); else boot();
   window.__erhBake = bakeHTML; // exposed for headless verification
   window.__erhState = function(){ return { editing: editing, annotating: annotating }; };

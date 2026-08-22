@@ -1,6 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { snap, prune, entryToStyle, normalize, toDoc, op } = require('../assets/patch-core.js');
+const { snap, prune, entryToStyle, normalize, toDoc, op, lastNote, removeNotes } = require('../assets/patch-core.js');
 
 test('snap: off returns rounded value unchanged', () => {
   assert.equal(snap(37, false, 24), 37);
@@ -97,4 +97,52 @@ test('op: stamps kind and fields with an ISO timestamp', () => {
   assert.equal(o.kind, 'note');
   assert.equal(o.note, 'fix this');
   assert.match(o.t, /^\d{4}-\d{2}-\d{2}T/);
+});
+
+// ---------------------------------------------------------------------------
+// Notes: note-only entries must survive serialization; read/remove helpers
+// ---------------------------------------------------------------------------
+
+test('toDoc: entry with only a note in history is preserved', () => {
+  // Regression: iterating flat keys alone dropped notes on never-nudged elements.
+  const flat = {};
+  const hist = { subtitle: [{ t: 'T1', kind: 'note', note: 'too long' }] };
+  const out = normalize(toDoc(flat, hist));
+  assert.deepEqual(out.hist.subtitle, hist.subtitle);
+});
+
+test('toDoc: entry with neither facets nor history is still dropped', () => {
+  assert.deepEqual(toDoc({ ghost: {} }, { ghost: [] }).entries, {});
+});
+
+test('lastNote: returns the most recent note text for an eid', () => {
+  const hist = { t: [
+    { t: 'T1', kind: 'note', note: 'first' },
+    { t: 'T2', kind: 'move', transform: { x: 1, y: 0 } },
+    { t: 'T3', kind: 'note', note: 'second' },
+  ] };
+  assert.equal(lastNote(hist, 't'), 'second');
+});
+
+test('lastNote: returns null when there are no notes or no entry', () => {
+  assert.equal(lastNote({ t: [{ t: 'T1', kind: 'move', transform: {} }] }, 't'), null);
+  assert.equal(lastNote({}, 'x'), null);
+});
+
+test('removeNotes: strips every note op, keeps the rest, reports whether it removed', () => {
+  const hist = { t: [
+    { t: 'T1', kind: 'note', note: 'a' },
+    { t: 'T2', kind: 'move', transform: { x: 1, y: 0 } },
+    { t: 'T3', kind: 'note', note: 'b' },
+  ] };
+  assert.equal(removeNotes(hist, 't'), true);
+  assert.deepEqual(hist.t, [{ t: 'T2', kind: 'move', transform: { x: 1, y: 0 } }]);
+  assert.equal(removeNotes({ t: [{ t: 'T1', kind: 'move', transform: {} }] }, 't'), false);
+  assert.equal(removeNotes({}, 'x'), false);
+});
+
+test('removeNotes: deletes the history array entirely when only notes remained', () => {
+  const hist = { t: [{ t: 'T1', kind: 'note', note: 'a' }] };
+  removeNotes(hist, 't');
+  assert.ok(!('t' in hist));
 });

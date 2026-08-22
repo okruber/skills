@@ -54,13 +54,16 @@
     return { flat, hist };
   }
 
-  // Build a v2 document from working state. Entries with neither facets nor history are dropped.
+  // Build a v2 document from working state. Entries need facets or history;
+  // iterating flat keys alone would silently drop notes on never-nudged elements.
   function toDoc(flat, hist) {
+    const eids = new Set(Object.keys(flat || {}).concat(Object.keys(hist || {})));
     const entries = {};
-    for (const eid in flat) {
-      if (!flat[eid] || !Object.keys(flat[eid]).length) continue;
-      entries[eid] = { final: flat[eid], history: (hist && hist[eid]) || [] };
-    }
+    eids.forEach(function (eid) {
+      const f = flat[eid] && Object.keys(flat[eid]).length ? flat[eid] : {};
+      const h = (hist && hist[eid]) || [];
+      if (Object.keys(f).length || h.length) entries[eid] = { final: f, history: h };
+    });
     return { version: 2, entries };
   }
 
@@ -69,5 +72,23 @@
     return Object.assign({ t: new Date().toISOString(), kind: kind }, fields);
   }
 
-  return { snap, prune, entryToStyle, normalize, toDoc, op };
+  // Most recent unacted note on an eid, or null.
+  function lastNote(hist, eid) {
+    const h = hist && hist[eid];
+    if (!h) return null;
+    for (let i = h.length - 1; i >= 0; i--) if (h[i].kind === 'note') return h[i].note;
+    return null;
+  }
+
+  // Drop every unacted note op for an eid; true when anything was removed.
+  function removeNotes(hist, eid) {
+    const h = hist && hist[eid];
+    if (!h) return false;
+    const kept = h.filter(function (o) { return o.kind !== 'note'; });
+    if (kept.length === h.length) return false;
+    if (kept.length) hist[eid] = kept; else delete hist[eid];
+    return true;
+  }
+
+  return { snap, prune, entryToStyle, normalize, toDoc, op, lastNote, removeNotes };
 });
