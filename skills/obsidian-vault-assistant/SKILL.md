@@ -116,6 +116,7 @@ Report orphans, broken links, untyped notes, duplicates, and obvious contradicti
 | "Plan this week" | Browse `Backlog`; pull items into `This Week` only by Olle choice |
 | "Hand this off" | Use `handoff`; write brief |
 | "Ingest/read/save this" | Capture source, then ingest deliberately (see `KNOWLEDGE.md`) |
+| "Guided read" (Olle pastes a link) | Use the `guided-read` skill: one frame card, reflect, distill proportionately, log |
 | "What do I know about X?" | Query `Wiki/` via index and relevant pages |
 | "Lint/health check" | Run lint and report. Also report status counts, never-reviewed items, and items past `review_after` |
 | "What's due?" | List the Due queue oldest first; take each item to one of the five verdicts |
