@@ -1,6 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { snap, prune, entryToStyle } = require('../assets/patch-core.js');
+const { snap, prune, entryToStyle, normalize, toDoc, op } = require('../assets/patch-core.js');
 
 test('snap: off returns rounded value unchanged', () => {
   assert.equal(snap(37, false, 24), 37);
@@ -45,4 +45,56 @@ test('entryToStyle: combined facets merge', () => {
 
 test('entryToStyle: empty entry -> empty object', () => {
   assert.deepEqual(entryToStyle({}), {});
+});
+
+// ---------------------------------------------------------------------------
+// Patch schema v2: {version, entries:{eid:{final, history}}}
+// ---------------------------------------------------------------------------
+
+test('normalize: v1 flat patch becomes flat facets with empty histories', () => {
+  const out = normalize({ title: { text: 'x' } });
+  assert.deepEqual(out, { flat: { title: { text: 'x' } }, hist: {} });
+});
+
+test('normalize: null/garbage input yields empty state', () => {
+  assert.deepEqual(normalize(null), { flat: {}, hist: {} });
+  assert.deepEqual(normalize('nonsense'), { flat: {}, hist: {} });
+});
+
+test('normalize: v2 doc splits final facets and history per eid', () => {
+  const doc = { version: 2, entries: {
+    title: { final: { text: 'hi' }, history: [{ t: 'T1', kind: 'retype', text: 'hi' }] },
+    body: { final: {}, history: [{ t: 'T2', kind: 'note', note: 'tighten' }] },
+  } };
+  const out = normalize(doc);
+  assert.deepEqual(out.flat, { title: { text: 'hi' } }); // empty-final entries carry no facets
+  assert.deepEqual(out.hist.title, doc.entries.title.history);
+  assert.deepEqual(out.hist.body, doc.entries.body.history);
+});
+
+test('toDoc: builds v2 doc from flat facets and histories, drops fully-empty entries', () => {
+  const flat = { title: { text: 'x' }, ghost: {} };
+  const hist = { title: [{ t: 'T1', kind: 'move', transform: { x: 1, y: 0 } }] };
+  const doc = toDoc(flat, hist);
+  assert.equal(doc.version, 2);
+  assert.deepEqual(doc.entries.title, { final: { text: 'x' }, history: hist.title });
+  assert.ok(!('ghost' in doc.entries));
+});
+
+test('toDoc then normalize round-trips facets and history including notes', () => {
+  const hist = { h: [
+    { t: 'T1', kind: 'note', note: 'make punchier' },
+    { t: 'T2', kind: 'retype', text: 'punchy' },
+  ] };
+  const flat = { h: { text: 'punchy' } };
+  const out = normalize(toDoc(flat, hist));
+  assert.deepEqual(out.flat, flat);
+  assert.deepEqual(out.hist, hist);
+});
+
+test('op: stamps kind and fields with an ISO timestamp', () => {
+  const o = op('note', { note: 'fix this' });
+  assert.equal(o.kind, 'note');
+  assert.equal(o.note, 'fix this');
+  assert.match(o.t, /^\d{4}-\d{2}-\d{2}T/);
 });

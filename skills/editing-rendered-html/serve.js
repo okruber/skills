@@ -4,11 +4,33 @@ const fs = require('node:fs');
 const path = require('node:path');
 const crypto = require('node:crypto');
 
+const MIME_TYPES = { '.css': 'text/css', '.js': 'application/javascript' };
+
 // ---------- pure helpers (unit-tested) ----------
 function sidecarPaths(target) {
   const dir = path.dirname(target);
   const base = path.basename(target).replace(/\.html?$/i, '');
   return { patch: path.join(dir, base + '.patch.json'), final: path.join(dir, base + '.final.html') };
+}
+
+// Sorted slide list for a directory: .html only, excluding .final.html bakes.
+function listSlides(dir) {
+  let names;
+  try { names = fs.readdirSync(dir); } catch (e) { return []; }
+  return names
+    .filter((n) => /\.html?$/i.test(n) && !/\.final\.html?$/i.test(n))
+    .sort();
+}
+
+// Per-slide sidecar paths inside a deck directory.
+function slidePaths(dir, name) {
+  const safe = path.basename(name); // blocks traversal via crafted slide names
+  const base = safe.replace(/\.html?$/i, '');
+  return {
+    source: path.join(dir, safe),
+    patch: path.join(dir, base + '.patch.json'),
+    final: path.join(dir, base + '.final.html'),
+  };
 }
 
 // Serialize an object for safe embedding inside an inline <script>. JSON has no
@@ -22,9 +44,10 @@ function seedJSON(obj) {
     .replace(/\u2029/g, '\\u2029');
 }
 
-function injectBundle(html, initialPatch) {
+function injectBundle(html, initialPatch, deck) {
+  const deckSeed = deck ? 'window.__erhDeck=' + seedJSON(deck) + ';' : '';
   const seed = '<script data-erh-asset="1">window.__erhServed=true;window.__erhInitialPatch='
-    + seedJSON(initialPatch) + ';</script>';
+    + seedJSON(initialPatch) + ';' + deckSeed + '</script>';
   const transport = '<script data-erh-asset="1">(function(){var ws;function open(){ws=new WebSocket("ws://"+location.host);'
     + 'ws.onclose=function(){setTimeout(open,1000)};}open();window.__erhSend=function(m){'
     + 'if(ws&&ws.readyState===1)ws.send(JSON.stringify(m));};})();</script>';
@@ -53,31 +76,47 @@ function decode(buf) {
   return { opcode: buf[0] & 0x0f, payload, consumed: off + len };
 }
 
-module.exports = { sidecarPaths, injectBundle, seedJSON, decode };
+module.exports = { sidecarPaths, injectBundle, seedJSON, decode, listSlides, slidePaths };
 
 // ---------- server (runs only when invoked directly) ----------
 if (require.main === module) {
   const target = process.argv[2];
-  if (!target) { console.error('usage: node serve.js <file.html> [--port N]'); process.exit(1); }
+  if (!target) { console.error('usage: node serve.js <file.html | deck-dir> [--port N]'); process.exit(1); }
   const portArg = process.argv.indexOf('--port');
   const PORT = portArg > -1 ? Number(process.argv[portArg + 1]) : 0;
   const ASSET_DIR = path.join(__dirname, 'assets');
-  const paths = sidecarPaths(target);
-  const MIME = { '.css': 'text/css', '.js': 'application/javascript' };
   const WS_MAGIC = '258EAFA5-E914-47DA-95CA-C5AB0DC85B11';
 
-  function readInitialPatch() {
-    try { return JSON.parse(fs.readFileSync(paths.patch, 'utf8')); } catch (e) { return {}; }
+  // Deck mode when the target is a directory; single-file mode otherwise.
+  const isDeck = (() => { try { return fs.statSync(target).isDirectory(); } catch (e) { return false; } })();
+  const slides = isDeck ? listSlides(target) : null;
+  if (isDeck && !slides.length) { console.error(JSON.stringify({ event: 'no-slides', dir: target })); process.exit(1); }
+
+  function resolveSlide(name) {
+    if (!isDeck) { const p = sidecarPaths(target); return { source: target, paths: p }; }
+    const base = path.basename(String(name || ''));
+    if (!slides.includes(base)) return null;
+    return { source: slidePaths(target, base).source, paths: slidePaths(target, base) };
+  }
+  function currentSlide(url) {
+    if (!isDeck) return resolveSlide();
+    const m = /[?&]s=(\d+)/.exec(url || '');
+    const i = Math.max(0, Math.min(slides.length - 1, m ? Number(m[1]) : 0));
+    return Object.assign(resolveSlide(slides[i]), { index: i });
   }
 
   const server = http.createServer((req, res) => {
     try {
-      if (req.url === '/') {
+      const u = req.url || '/';
+      if (u === '/' || u.startsWith('/?')) {
+        const slide = currentSlide(u);
         let html;
-        try { html = fs.readFileSync(target, 'utf8'); }
+        try { html = fs.readFileSync(slide.source, 'utf8'); }
         catch (e) { res.writeHead(500); res.end('source unavailable'); return; }
+        let init; try { init = JSON.parse(fs.readFileSync(slide.paths.patch, 'utf8')); } catch (e) { init = {}; }
+        const deckSeed = isDeck ? { index: slide.index, total: slides.length, names: slides } : undefined;
         res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
-        res.end(injectBundle(html, readInitialPatch()));
+        res.end(injectBundle(html, init, deckSeed));
         return;
       }
       if (req.url.startsWith('/__erh/')) {
@@ -85,7 +124,7 @@ if (require.main === module) {
         let st = null;
         try { st = fs.statSync(file); } catch (e) { st = null; }
         if (st && st.isFile()) {
-          res.writeHead(200, { 'Content-Type': MIME[path.extname(file)] || 'application/octet-stream' });
+          res.writeHead(200, { 'Content-Type': MIME_TYPES[path.extname(file)] || 'application/octet-stream' });
           res.end(fs.readFileSync(file));
           return;
         }
@@ -110,12 +149,16 @@ if (require.main === module) {
         if (f.opcode === 0x01) {
           let msg; try { msg = JSON.parse(f.payload.toString()); } catch (e) { continue; }
           if (msg.type === 'patch') {
+            const slide = resolveSlide(msg.slide);
+            if (!slide) { console.log(JSON.stringify({ event: 'patch-skipped', reason: 'unknown-slide' })); continue; }
             let parsed; try { parsed = JSON.parse(msg.payload); } catch (e) { continue; }
-            fs.writeFileSync(paths.patch, JSON.stringify(parsed, null, 2));
-            console.log(JSON.stringify({ event: 'patch-saved', file: paths.patch }));
+            fs.writeFileSync(slide.paths.patch, JSON.stringify(parsed, null, 2));
+            console.log(JSON.stringify({ event: 'patch-saved', file: slide.paths.patch }));
           } else if (msg.type === 'final') {
-            fs.writeFileSync(paths.final, msg.html);
-            console.log(JSON.stringify({ event: 'finalized', file: paths.final }));
+            const slide = resolveSlide(msg.slide);
+            if (!slide) { console.log(JSON.stringify({ event: 'finalize-skipped', reason: 'unknown-slide' })); continue; }
+            fs.writeFileSync(slide.paths.final, msg.html);
+            console.log(JSON.stringify({ event: 'finalized', file: slide.paths.final }));
           }
         }
       }
@@ -135,6 +178,9 @@ if (require.main === module) {
 
   server.listen(PORT, '127.0.0.1', () => {
     const url = 'http://localhost:' + server.address().port;
-    console.log(JSON.stringify({ event: 'serving', target, url, patch: paths.patch, final: paths.final }));
+    const out = isDeck
+      ? { event: 'serving', mode: 'deck', target, url, slides: slides.length }
+      : (() => { const p = sidecarPaths(target); return { event: 'serving', mode: 'single', target, url, patch: p.patch, final: p.final }; })();
+    console.log(JSON.stringify(out));
   });
 }

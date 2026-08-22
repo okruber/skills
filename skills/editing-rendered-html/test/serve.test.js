@@ -1,7 +1,9 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const path = require('node:path');
-const { injectBundle, sidecarPaths, seedJSON, decode } = require('../serve.js');
+const fs = require('node:fs');
+const os = require('node:os');
+const { injectBundle, sidecarPaths, seedJSON, decode, listSlides, slidePaths } = require('../serve.js');
 
 test('sidecarPaths: derives patch and final beside target', () => {
   const p = sidecarPaths('/tmp/deck.html');
@@ -33,6 +35,100 @@ test('injectBundle: appends bundle when no </body> present', () => {
   const out = injectBundle('<h1>bare</h1>', {});
   assert.match(out, /\/__erh\/overlay\.js/);
 });
+
+// ---------------------------------------------------------------------------
+// deck mode: listing and per-slide sidecars
+// ---------------------------------------------------------------------------
+
+function tmpDir(files) {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'erh-deck-'));
+  for (const [name, body] of Object.entries(files)) fs.writeFileSync(path.join(dir, name), body);
+  return dir;
+}
+
+test('listSlides: sorted .html files, excluding .final.html and sidecars', () => {
+  const dir = tmpDir({
+    'slide-02.html': '<p>2</p>', 'slide-01.html': '<p>1</p>',
+    'slide-01.final.html': '<p>baked</p>', 'slide-01.patch.json': '{}', 'notes.txt': 'x',
+  });
+  assert.deepEqual(listSlides(dir), ['slide-01.html', 'slide-02.html']);
+});
+
+test('listSlides: empty or missing directory returns []', () => {
+  assert.deepEqual(listSlides(tmpDir({})), []);
+  assert.deepEqual(listSlides('/nonexistent-erh-dir'), []);
+});
+
+test('slidePaths: per-slide sidecars beside the slide inside the deck dir', () => {
+  const p = slidePaths('/tmp/deck', 'slide-01.html');
+  assert.equal(p.source, path.join('/tmp/deck', 'slide-01.html'));
+  assert.equal(p.patch, path.join('/tmp/deck', 'slide-01.patch.json'));
+  assert.equal(p.final, path.join('/tmp/deck', 'slide-01.final.html'));
+});
+
+test('injectBundle: deck info seeds __erhDeck with index, total, and slide names', () => {
+  const out = injectBundle('<html><body></body></html>', {}, { index: 1, total: 3, names: ['a.html', 'b.html', 'c.html'] });
+  assert.match(out, /window\.__erhDeck=\{"index":1,"total":3,"names":\["a\.html","b\.html","c\.html"\]\}/);
+});
+
+test('injectBundle: no deck info leaves __erhDeck unset', () => {
+  const out = injectBundle('<html><body></body></html>', {});
+  assert.ok(!out.includes('__erhDeck'));
+});
+
+// ---------------------------------------------------------------------------
+// integration: spawned deck server — routing, seed, per-slide patch write
+// ---------------------------------------------------------------------------
+
+function startServer(target) {
+  const { spawn } = require('node:child_process');
+  const serve = path.join(__dirname, '..', 'serve.js');
+  const child = spawn(process.execPath, [serve, target, '--port', '0'], { stdio: 'pipe' });
+  return new Promise((resolve, reject) => {
+    let buf = '';
+    child.stdout.on('data', (d) => {
+      buf += d;
+      const line = buf.split('\n').find((l) => l.includes('"event":"serving"'));
+      if (line) resolve({ child, info: JSON.parse(line) });
+    });
+    child.on('error', reject);
+    setTimeout(() => reject(new Error('server did not start: ' + buf)), 5000);
+  });
+}
+
+async function wsSend(url, message) {
+  const ws = new WebSocket(url.replace('http://', 'ws://'));
+  await new Promise((res, rej) => { ws.onopen = res; ws.onerror = () => rej(new Error('ws failed')); });
+  ws.send(JSON.stringify(message));
+  await new Promise((r) => setTimeout(r, 300)); // give the server a moment to write
+  ws.close();
+}
+
+test('deck server: serves slides with deck seed, writes patches to the addressed slide', async () => {
+  const dir = tmpDir({
+    'a.html': '<html><body><h1 data-eid="t">A</h1></body></html>',
+    'b.html': '<html><body><h1 data-eid="t">B</h1></body></html>',
+  });
+  const { child, info } = await startServer(dir);
+  try {
+    const first = await fetch(info.url);
+    const firstBody = await first.text();
+    assert.match(firstBody, /A</);
+    assert.match(firstBody, /__erhDeck=\{"index":0,"total":2,"names":\["a\.html","b\.html"\]\}/);
+
+    const second = await fetch(info.url + '/?s=1');
+    assert.match(await second.text(), /B</);
+
+    await wsSend(info.url, { type: 'patch', slide: 'b.html', payload: JSON.stringify({ version: 2, entries: {} }) });
+    assert.ok(fs.existsSync(path.join(dir, 'b.patch.json')), 'patch lands on the addressed slide');
+    assert.ok(!fs.existsSync(path.join(dir, 'a.patch.json')), 'no patch on the untouched slide');
+
+    await wsSend(info.url, { type: 'patch', payload: JSON.stringify({ version: 2, entries: {} }) });
+    assert.ok(!fs.existsSync(path.join(dir, 'a.patch.json')), 'unaddressed patch is skipped in deck mode');
+  } finally {
+    child.kill();
+  }
+}, { timeout: 10000 });
 
 // ---------------------------------------------------------------------------
 // Helper: build a masked RFC-6455 text frame (opcode 0x01, FIN set, mask bit set).

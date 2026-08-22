@@ -39,5 +39,35 @@
     return css;
   }
 
-  return { snap, prune, entryToStyle };
+  // Normalize any stored patch (v1 flat map or v2 doc) to working state.
+  function normalize(raw) {
+    if (!raw || typeof raw !== 'object' || Array.isArray(raw) || !raw.entries || typeof raw.entries !== 'object') {
+      return { flat: prune(raw && typeof raw === 'object' && !Array.isArray(raw) ? raw : {}), hist: {} };
+    }
+    const flat = {}, hist = {};
+    for (const eid in raw.entries) {
+      const e = raw.entries[eid] || {};
+      const f = prune(e.final && typeof e.final === 'object' ? e.final : {});
+      if (Object.keys(f).length) flat[eid] = f;
+      if (Array.isArray(e.history) && e.history.length) hist[eid] = e.history;
+    }
+    return { flat, hist };
+  }
+
+  // Build a v2 document from working state. Entries with neither facets nor history are dropped.
+  function toDoc(flat, hist) {
+    const entries = {};
+    for (const eid in flat) {
+      if (!flat[eid] || !Object.keys(flat[eid]).length) continue;
+      entries[eid] = { final: flat[eid], history: (hist && hist[eid]) || [] };
+    }
+    return { version: 2, entries };
+  }
+
+  // A timestamped history operation.
+  function op(kind, fields) {
+    return Object.assign({ t: new Date().toISOString(), kind: kind }, fields);
+  }
+
+  return { snap, prune, entryToStyle, normalize, toDoc, op };
 });

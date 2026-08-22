@@ -1,8 +1,9 @@
 # Headless smoke — editing-rendered-html
 
 End-to-end verification of the full loop (serve → edit → save → finalize → bake).
-The unit suites (`node --test "skills/editing-rendered-html/test/*.test.js"`, 14 tests)
-cover the pure helpers; this smoke covers the browser + server round-trip they can't.
+The unit suites (`node --test "skills/editing-rendered-html/test/*.test.js"`, 35 tests)
+cover the pure helpers plus the deck server round-trip; this smoke covers the
+browser overlay they can't.
 
 > Node ≥ 21 required. On Node v25, `node --test <dir>` no longer scans a directory —
 > pass a glob (`"…/test/*.test.js"`) or a file path.
@@ -11,7 +12,7 @@ cover the pure helpers; this smoke covers the browser + server round-trip they c
 
 ```bash
 node --test "skills/editing-rendered-html/test/*.test.js"
-# expect: tests 14, pass 14, fail 0
+# expect: tests 35, pass 35, fail 0
 ```
 
 ## 2. Start the server on the fixture
@@ -54,6 +55,14 @@ await tab.evaluate(() => {
   const tn = [...n.childNodes].find(c=>c.nodeType===3); tn.nodeValue = 'Nudged copy';
   n.dispatchEvent(new Event('input',{bubbles:true}));
 });
+// leave an annotation: A (annotate mode), click the title, type, Enter
+await tab.evaluate(() => { document.dispatchEvent(new KeyboardEvent('keydown',{key:'a'})); });
+await tab.click('[data-eid="title"]');
+await tab.evaluate(() => {
+  const ta = document.querySelector('#erh-note textarea');
+  ta.value = 'tighten this headline';
+  ta.dispatchEvent(new KeyboardEvent('keydown',{key:'Enter',bubbles:true}));
+});
 await tab.click('#erh-save');                       // -> writes <name>.patch.json
 await tab.click('#erh-final');                      // -> writes <name>.final.html
 await wait(300);                                    // let WS frames flush to disk
@@ -74,14 +83,30 @@ display({
 
 ```bash
 cat skills/editing-rendered-html/fixtures/sample.patch.json
-# expect: {"title":{"transform":{"x":50,"y":30}}, "subtitle":{"text":"Nudged copy"}}
+# expect: v2 doc — {"version":2,"entries":{"title":{"final":{"transform":{"x":50,"y":30}},
+#         "history":[{"kind":"move",...}]},"subtitle":{"final":{"text":"Nudged copy"},
+#         "history":[{"kind":"note","note":"tighten this headline",...},{"kind":"retype","text":"Nudged copy",...}]}}}
+# (exact history order may vary; every op must carry an ISO `t`)
 
 grep -c 'data-overlay\|erh-grip\|__erh/\|erh-editing\|erh-selected\|erh-grid-on\|--erh-gridpx\|contenteditable\|data-erh-pos' \
   skills/editing-rendered-html/fixtures/sample.final.html
 # expect: 0 (grep exits 1 on zero matches — that is the pass)
 ```
 
-## 5. Clean up
+## 5. Deck smoke (optional, once per overlay change)
+
+```bash
+mkdir -p /tmp/erh-deck && cp skills/editing-rendered-html/fixtures/sample.html /tmp/erh-deck/slide-01.html \
+  && sed 's/data-eid="title"/data-eid="title2"/' skills/editing-rendered-html/fixtures/sample.html > /tmp/erh-deck/slide-02.html
+node skills/editing-rendered-html/serve.js /tmp/erh-deck --port 0 &
+```
+
+Open the URL, then verify in the browser:
+- `window.__erhDeck` is `{index:0,total:2,names:["slide-01.html","slide-02.html"]}`
+- `#erh-nav` exists with count `1 / 2`; clicking next (or ArrowRight) lands on slide 2 with `?s=1`
+- editing slide 2 and saving writes `/tmp/erh-deck/slide-02.patch.json`, not slide-01's
+
+## 6. Clean up
 
 ```bash
 pkill -f "serve.js skills/editing-rendered-html/fixtures/sample.html"
