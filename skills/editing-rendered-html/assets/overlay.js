@@ -6,6 +6,7 @@
   // normalize() accepts both v1 flat maps and v2 {entries:{eid:{final,history}}} docs.
   var init = PC.normalize(window.__erhServed ? (window.__erhInitialPatch || {}) : load(STORE));
   var patch = init.flat, hist = init.hist;
+  var pref = load(PREF);
   var editing = false, sel = null, annotating = false;
   var grid = { on: !!pref.gridOn, step: pref.gridStep || 24 };
   var LIGHT = ['#ffffff','#e6edf3','#cdd9e5','#a5d6ff','#b5e8c9','#ffd9a8','#ffc8dd','#1f2937'];
