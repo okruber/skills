@@ -197,11 +197,12 @@
   document.addEventListener('keydown', function(e){
     var typing = e.target.getAttribute('contenteditable')==='true' || /input|textarea|select/i.test(e.target.tagName);
     if(typing) return;
-    if(e.key==='e') setEditing(!editing);
-    if(e.key==='g'){ grid.on=!grid.on; applyGrid(); savePref(); }
-    if(e.key==='a' && editing) setAnnotating(!annotating);
-    if(e.key==='ArrowLeft' && window.__erhGo){ e.preventDefault(); window.__erhGo(window.__erhDeck.index - 1); }
-    if(e.key==='ArrowRight' && window.__erhGo){ e.preventDefault(); window.__erhGo(window.__erhDeck.index + 1); }
+    var k = e.key.toLowerCase();
+    if(k==='e') setEditing(!editing);
+    if(k==='g'){ grid.on=!grid.on; applyGrid(); savePref(); }
+    if(k==='a'){ if(!editing) setEditing(true); setAnnotating(!annotating); }
+    if(k==='arrowleft' && window.__erhGo){ e.preventDefault(); window.__erhGo(window.__erhDeck.index - 1); }
+    if(k==='arrowright' && window.__erhGo){ e.preventDefault(); window.__erhGo(window.__erhDeck.index + 1); }
     if(e.key==='Escape'){ closeNote(); if(annotating) setAnnotating(false); else deselect(); }
   });
   document.addEventListener('click', function(e){ if(!editing) return; if(!e.target.closest('[data-eid]') && !e.target.closest('#erh-fmt') && !e.target.closest('#erh-bar')) deselect(); });
@@ -209,4 +210,5 @@
   function boot(){ buildChrome(); buildNav(); decorate(); applyAll(); applyGrid(); setEditing(false); }
   if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot); else boot();
   window.__erhBake = bakeHTML; // exposed for headless verification
+  window.__erhState = function(){ return { editing: editing, annotating: annotating }; };
 })();

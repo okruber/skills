@@ -37,3 +37,65 @@ test('overlay: boots without reference errors under stub DOM', () => {
   vm.runInNewContext(core, sandbox, { filename: 'patch-core.js' });
   assert.doesNotThrow(() => vm.runInNewContext(src, sandbox, { filename: 'overlay.js' }));
 });
+
+// Behavioral check through the real keydown handler: A must enter annotate
+// mode even when edit mode is off, and toggle back off.
+test('overlay: A enters annotate mode without prior edit mode, and toggles off', () => {
+  const src = fs.readFileSync(path.join(__dirname, '..', 'assets', 'overlay.js'), 'utf8');
+  const listeners = {};
+
+  function absorb() {
+    const fn = function () { return p; };
+    const p = new Proxy(fn, {
+      get: () => p,
+      set: () => true,
+      apply: () => p,
+      construct: () => p,
+    });
+    return p;
+  }
+
+  const classCalls = [];
+  const doc = new Proxy(function () {}, {
+    get(t, prop) {
+      if (prop === 'addEventListener') {
+        return (type, fn) => { (listeners[type] = listeners[type] || []).push(fn); };
+      }
+      if (prop === 'body') {
+        return { classList: { toggle: (...a) => classCalls.push(a), add() {}, remove() {} },
+          appendChild() {}, remove() {} };
+      }
+      return absorb();
+    },
+    apply: () => absorb(),
+  });
+
+  const sandbox = {
+    window: null,
+    document: doc,
+    localStorage: { getItem: () => null, setItem: () => {}, removeItem: () => {} },
+    location: { pathname: '/x', href: '' },
+    navigator: {},
+    module: { exports: {} },
+    setTimeout: () => 0, clearTimeout: () => {},
+    Math, Object, JSON, RegExp, Date, String, Number,
+  };
+  sandbox.window = sandbox;
+  const core = fs.readFileSync(path.join(__dirname, '..', 'assets', 'patch-core.js'), 'utf8');
+  vm.runInNewContext(core, sandbox, { filename: 'patch-core.js' });
+  vm.runInNewContext(src, sandbox, { filename: 'overlay.js' });
+
+  assert.ok(listeners.keydown && listeners.keydown.length, 'overlay must register a keydown handler');
+  const keydown = listeners.keydown[listeners.keydown.length - 1];
+  const ev = (key) => ({
+    key,
+    target: { tagName: 'BODY', getAttribute: () => null },
+    preventDefault() {}, stopPropagation() {},
+  });
+
+  keydown(ev('A')); // uppercase: still works
+  assert.equal(sandbox.window.__erhState().annotating, true, 'uppercase A must enter annotate mode');
+  assert.equal(sandbox.window.__erhState().editing, true, 'annotate must imply edit mode');
+  keydown(ev('a'));
+  assert.equal(sandbox.window.__erhState().annotating, false, 'second A must exit annotate mode');
+});
