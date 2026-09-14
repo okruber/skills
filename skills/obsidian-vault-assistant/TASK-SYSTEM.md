@@ -23,6 +23,7 @@ completed: false
 created: YYYY-MM-DD
 last_reviewed:
 review_after: YYYY-MM-DD   # required while open
+closed:                    # YYYY-MM-DD when the note closed; blank while open
 blocked:
 repo:
 links:
@@ -58,6 +59,8 @@ It drives the **Due** view in `Task Dashboard.base` (`review_after && review_aft
 
 Keep it registered as `date` in `.obsidian/types.json`. Untyped, Obsidian treats it as freetext and the date comparison silently matches nothing — the same failure mode `completed` was protected from.
 
+`last_reviewed` is empty at creation and set by any review. A young never-reviewed note is normal; a stale one is the rot signal.
+
 **Clearing an item from Due means giving it one of five verdicts:** act, delegate, question, park, or close. Park requires a new date *and* a one-line reason. The same reason twice is the signal to propose a drop.
 
 ## `completed` — the closure inbox
@@ -69,8 +72,10 @@ It exists because Olle often finishes work outside the dialogue, especially pers
 The loop:
 
 1. Olle ticks `completed` in `Task Dashboard.base`. A global `completed != true` filter hides the row immediately.
-2. The assistant reconciles it on the next sweep: set `status: done`.
+2. The assistant reconciles it on the next sweep: set `status: done` and `closed` to the sweep date.
 3. **Never untick it.** The flag moves one way only, so the end state is `completed: true` with `status: done` and the two agree.
+
+**Closing sets two things and removes nothing.** When a note becomes `done` or `dropped` (always at Olle's call), set `closed: YYYY-MM-DD` to the decision date and leave `review_after` untouched: closed items keep the date they had. Blanking `review_after` on close destroys the surface date and is a linter hard issue. Already-closed notes without a `closed` date stay undated rather than guessed.
 
 **Invariant:** `status: done` if and only if `completed: true`.
 

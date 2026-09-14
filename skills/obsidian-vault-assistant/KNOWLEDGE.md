@@ -15,7 +15,7 @@ Disclosed reference for [`obsidian-vault-assistant`](SKILL.md). The `durable` vs
 
 Wiki pages are **durable** reference only — not a bin for task byproducts. The test: *"in six months, when I ask 'what do I know about X?', do I want this to surface?"* Yes → Wiki. "Only meaningful for this one task/meeting" → it is a **transient** task artifact and belongs in the **task note body** (or `Logs/` for traces).
 
-Concretely: meeting agendas, prep, checklists, and per-task working notes stay with the Task; durable understanding distilled from the work goes to the Wiki. Wiki pages carry `type/` frontmatter and are listed in `Wiki/index.md`; a dated-and-disposable would-be page fails the test — keep it out of `Wiki/`.
+Concretely: meeting agendas, prep, checklists, and per-task working notes stay with the Task; durable understanding distilled from the work goes to the Wiki. Curated `Wiki/` pages carry `Area`/`Type`/`Keyword` taxonomy and are listed in `Wiki/index.md`; `Sources/` and `Templates/` are exempt. A curated page needs at least one inbound content link or an index entry, so the knowledge layer has no islands; the linter reports orphans by both the content-page metric and vault-wide. A dated-and-disposable would-be page fails the test — keep it out of `Wiki/`.
 
 ## Source ingest — the guided read
 

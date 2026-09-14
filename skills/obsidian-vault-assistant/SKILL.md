@@ -24,7 +24,7 @@ Vault path, always quoted (this is the working directory for every vault action)
 
 1. Read `.pi/memory.md`.
 2. **Report the Due count and offer to run it.** Due = open task notes whose `review_after` has arrived. It is the first line of every vault session, before anything else. Empty means healthy; a number means that many items are waiting for a verdict.
-3. If `last-swept` is not today, run the ambient sweep in this order:
+3. If `last-swept` is not today, **or `Inbox.md` holds unprocessed bullets under `## New capture` / `## Pending Ingest`**, run the ambient sweep in this order (the stamp can be newer than the capture; content beats the stamp):
    - classify plain bullets in `Inbox.md` (see Inbox classification);
    - create/update task notes only when warranted, each with a `review_after` date;
    - surface `Logs/dreams/Pending.md` proposals for approval;
@@ -104,7 +104,7 @@ Ingest and query flows, the layer/ownership table, and the durable-vs-transient 
 python3 "$HOME/.agents/skills/obsidian-vault-assistant/tools/lint.py" "/Users/ollekruber/Library/Mobile Documents/iCloud~md~obsidian/Documents/Oek Vault"
 ```
 
-Report orphans, broken links, untyped notes, duplicates, and obvious contradictions. Apply fixes only with approval.
+Indexes the whole vault (root, Sources, assets, `.base` files; Archive/Logs/docs as targets only) and reports: task-system integrity (status/completed/date validity, done⇄tick invariant, blanked `review_after`, title↔filename, YAML safety, size vocabulary), structure drift (root canon, strays, `Untitled` files, ambiguous basenames), the wiki layer (orphans by content-page metric and vault-wide, untyped, taxonomy gaps, near-duplicates), and broken links split into live (hard) and historical (informational). Exits 1 on hard issues only. Apply fixes only with approval, in proposed batches.
 
 ## Natural Language Triggers
 
@@ -118,9 +118,21 @@ Report orphans, broken links, untyped notes, duplicates, and obvious contradicti
 | "Ingest/read/save this" | Capture source, then ingest deliberately (see `KNOWLEDGE.md`) |
 | "Guided read" (Olle pastes a link) | Use the `guided-read` skill: one frame card, reflect, distill proportionately, log |
 | "What do I know about X?" | Query `Wiki/` via index and relevant pages |
-| "Lint/health check" | Run lint and report. Also report status counts, never-reviewed items, and items past `review_after` |
+| "Lint/health check" | Run lint, then report hard issues and informational findings as fix batches (status counts, never-reviewed, past-`review_after`, blocked flags included); apply only approved batches |
 | "What's due?" | List the Due queue oldest first; take each item to one of the five verdicts |
 | "Run/review a dream" | Surface dream proposals; apply only approved changes |
+
+## Vault integrity
+
+Non-negotiables, enforced by the linter:
+
+- Typed fields stay typed: `review_after` and `closed` as `date`, `completed` as `checkbox` in `.obsidian/types.json`. An untyped date silently breaks the Due filter.
+- `status: done` if and only if `completed: true`; the tick is never removed.
+- Every open note carries a valid `review_after`, and it is never blanked: closed notes keep the date they had.
+- On close, set `closed: YYYY-MM-DD`; never invent a past closure date.
+- Root holds primitives only; no `Untitled` notes, no zero-byte files, no subfolders in `Tasks/`. A new root file or top-level folder gets a runbook note first.
+- `blocked` is a flag, not a status: set on dispatch, cleared when the dispatch reports back; a dated blocker expires with its date.
+- The filename is the task name; `title` keeps the exact phrasing (see TASK-SYSTEM.md). New wikilinks must reference existing notes.
 
 ## Hard Rules
 
