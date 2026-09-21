@@ -1,29 +1,24 @@
-# Task Note Mechanics
+# Task Note Mechanics — Schema v2
 
-Disclosed reference for [`obsidian-vault-assistant`](SKILL.md). Read before creating or editing a task note in `Tasks/`.
+Read this before creating or editing a note in `Tasks/`.
 
 ## Filename and title
 
-**Name each file by its readable title** (e.g. `Tenderdesk — MVP.md`), not a slug — `Task Dashboard.base` shows `file.name` as the clickable link, so the filename *is* the human-facing task name. Strip Obsidian/OS-illegal characters (`\ / : * ? " < > | # ^ [ ]`) from the filename (replace `/` with `-`); keep the exact phrasing in the `title` property.
+The filename is the readable task title. Use `Prefix — Action phrase`, preserve the exact phrase in `title`, and replace filename-illegal characters. Common prefixes are `Arrive`, `Builder Platform`, `Tenderdesk`, `imeto`, `Decksmith`, `Research`, and `Personal`.
 
-**Title format: `Prefix — Action phrase`.**
-
-- **Prefix** = the most-specific named project if one exists, else the domain. Controlled vocabulary: `Arrive` (client work/infra not under a named project), `Builder Platform` (aka Vibe Platform), `Tenderdesk`, `imeto` (own company: partnerships, recruiting, marketing, stakeholders), `Decksmith`, `Research` (personal R&D, tooling, learning, the vault/dreaming system), `Personal` (life admin). Separator is an em-dash ` — ` (colons/pipes are filename-illegal). Add a new prefix only when a project genuinely warrants its own group.
-- **Action phrase**: imperative verb first (`Ask`, `Build`, `Clarify`, `Investigate`, `Set up`, `Reach out`, `Write up`, `Review`, `Draft`, `Decide`, `Adopt`, `Message`), sentence case, no trailing period, ≤ ~70 chars. Turn raw thoughts/questions into an action (`Clarify…`, `Decide whether…`, `Investigate…`).
-- **No metadata in the title.** Timing → `review_after`; blocker/delegation → `blocked`; priority → `size`/`context`; rationale/detail → `context`/`next_action`/`acceptance`. Never bake "after vacation", "pushed to next week", "low priority", "delegated to X" into the name.
-
-## Frontmatter shape
+## Frontmatter
 
 ```yaml
 type: Task
+schema_version: 2
+id: "<UUID>"
 title: <short title>
-status: refine | backlog | this-week | done | dropped
-size: small | bigger
-completed: false
-created: YYYY-MM-DD
-last_reviewed:
-review_after: YYYY-MM-DD   # required while open
-closed:                    # YYYY-MM-DD when the note closed; blank while open
+status: available | committed | done | dropped
+created: YYYY-MM-DD        # may be blank on migrated history
+committed_at:              # required while committed
+commitment_cycle:          # required while committed
+commitment_until:          # optional
+closed:                    # required for done/dropped
 blocked:
 repo:
 links:
@@ -33,52 +28,25 @@ next_action:
 acceptance:
 ```
 
-`agent_candidate` was retired on 2026-08-13 and must not be added to new notes. Judge agent suitability from the task itself.
+Minimal capture is valid. `size`, `outcome`, and `next_action` are optional enrichment, not creation gates. `completed` and `review_after` are invalid legacy fields.
 
-Small tasks can stay list-like. Bigger human or agent-candidate tasks should include why/context/links and a useful `next_action`.
+After cutover, create tasks only through the constrained CLI:
 
-**YAML safety:** always double-quote any frontmatter value containing a colon-space (`: `), a leading `#`/`[`/`{`, or wikilinks (e.g. `next_action: "At the check-in: ..."`). Unquoted colons break the whole frontmatter block, which makes Obsidian drop the note's `status` — it then silently disappears from every dashboard view.
+```bash
+oek-task create-available --vault "$OEK_VAULT" --text "One sentence"
+```
 
-## Status matrix
+## Status authority
 
-| Status | Meaning | Who moves it there |
+| Status | Meaning | Who may move it there |
 |---|---|---|
-| `refine` | vague, ambiguous, dream output, or needs clarification | assistant may create; Olle chooses next state |
-| `backlog` | real but not committed this week | Olle, or explicit migration/grooming choice |
-| `this-week` | the committed now/next shortlist (what Olle is actively working) | Olle only after first migration |
-| `done` | complete | Olle only |
-| `dropped` | intentionally abandoned | Olle only; assistant may suggest |
+| `available` | captured and eligible, not committed | assistant may create via constrained CLI |
+| `committed` | explicit current commitment | Olle only, in Oek |
+| `done` | complete | Olle only, in Oek |
+| `dropped` | intentionally abandoned | Olle only, in Oek; assistant may suggest |
 
-`blocked` is a flag, not a status — see the Lifecycle section in `SKILL.md`.
+The assistant may add context and clarify a task. It may not commit, release, close, or drop. Explore is non-committing. A worker result is evidence to review, never an implicit close.
 
-## `review_after` — the surface date
+Migrated committed tasks that lack commitment metadata carry `revision_required: true`. The linter reports these as informational until Olle reviews them. `blocked` is context, not a status.
 
-Required on every open note (`refine`, `backlog`, `this-week`). Defaults on creation: refine +7 days, backlog +30.
-
-It drives the **Due** view in `Task Dashboard.base` (`review_after && review_after <= today()`), which is the queue the assistant reports at the start of every vault session. Nothing else returns an item to attention, so a note without a date is a note that can rot untouched. That is not hypothetical: on 2026-08-19, 74 of 79 open notes had no date and 12 had never been reviewed since June.
-
-Keep it registered as `date` in `.obsidian/types.json`. Untyped, Obsidian treats it as freetext and the date comparison silently matches nothing — the same failure mode `completed` was protected from.
-
-`last_reviewed` is empty at creation and set by any review. A young never-reviewed note is normal; a stale one is the rot signal.
-
-**Clearing an item from Due means giving it one of five verdicts:** act, delegate, question, park, or close. Park requires a new date *and* a one-line reason. The same reason twice is the signal to propose a drop.
-
-## `completed` — the closure inbox
-
-`completed` is a checkbox, not a status. `status` stays the single source of truth for the lifecycle.
-
-It exists because Olle often finishes work outside the dialogue, especially personal errands, and the note never gets updated. Editing `status` inline is not a safe alternative: `status` is untyped (freetext) and every dashboard filter is an exact string match, so one typo removes a note from every view. A checkbox has two states and cannot be mistyped.
-
-The loop:
-
-1. Olle ticks `completed` in `Task Dashboard.base`. A global `completed != true` filter hides the row immediately.
-2. The assistant reconciles it on the next sweep: set `status: done` and `closed` to the sweep date.
-3. **Never untick it.** The flag moves one way only, so the end state is `completed: true` with `status: done` and the two agree.
-
-**Closing sets two things and removes nothing.** When a note becomes `done` or `dropped` (always at Olle's call), set `closed: YYYY-MM-DD` to the decision date and leave `review_after` untouched: closed items keep the date they had. Blanking `review_after` on close destroys the surface date and is a linter hard issue. Already-closed notes without a `closed` date stay undated rather than guessed.
-
-**Invariant:** `status: done` if and only if `completed: true`.
-
-A tick means "I finished this". It cannot express `dropped`, because dropping is a decision and finishing is a fact — drops stay a conversation. Keep `completed` registered as `checkbox` in `.obsidian/types.json`, or the freetext problem returns.
-
-Replaced `agent_candidate` on 2026-08-13. That field drove no view filter and was display-only; judge agent suitability from the task itself instead.
+Keep one parseable frontmatter block. Double-quote values containing `: `, a leading `#`/`[`/`{`, or wikilinks.

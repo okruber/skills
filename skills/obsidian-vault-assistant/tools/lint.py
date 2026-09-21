@@ -14,6 +14,7 @@ Usage: python3 lint.py "/path/to/Oek Vault"
 import os
 import re
 import sys
+import uuid
 from collections import Counter, defaultdict
 from datetime import date, timedelta
 from difflib import SequenceMatcher
@@ -34,8 +35,8 @@ EXPECTED_ROOT = {
 EXPECTED_TOP = {"Tasks", "Wiki", "Logs", "Archive", "docs", "pi", "Topics"}
 HIST_AREAS = {"Archive", "Logs", "docs"}
 
-STATUS = {"refine", "backlog", "this-week", "done", "dropped"}
-OPEN = {"refine", "backlog", "this-week"}
+STATUS = {"available", "committed", "done", "dropped"}
+OPEN = {"available", "committed"}
 
 LINK_RE = re.compile(r"\[\[([^\]]+)\]\]")
 TYPE_RE = re.compile(r"#type/\w[\w-]*")
@@ -127,6 +128,10 @@ for r in sorted(md):
 
 hard, info = [], []
 
+for rel, path in sorted(files.items()):
+    if os.path.islink(path):
+        hard.append(f"symlink is not allowed in managed vault content: {rel}")
+
 
 def show(title, items, cap=20):
     print(f"\n{title}: {len(items)}")
@@ -139,8 +144,8 @@ def show(title, items, cap=20):
 # ---- task-system integrity ----
 today = date.today().isoformat()
 status_counts = Counter()
-young_never, stale_never = [], []
-pre_rule_closed = 0
+task_ids = defaultdict(list)
+revision_required = []
 blocked_notes = []
 for r in sorted(x for x in md if area(x) == "Tasks"):
     text, fm, _ = read_note(md[r])
@@ -151,44 +156,43 @@ for r in sorted(x for x in md if area(x) == "Tasks"):
     if ty != "Task":
         info.append(f"non-Task type in Tasks/: {name} (type={ty or 'none'})")
         continue
-    comp = fmval(fm.get("completed"))
+    schema = fmval(fm.get("schema_version"))
+    task_id = fmval(fm.get("id"))
     created = fmval(fm.get("created"))
-    ra = fmval(fm.get("review_after"))
-    lr = fmval(fm.get("last_reviewed"))
     closed = fmval(fm.get("closed"))
+    if schema != "2":
+        hard.append(f"{name}: schema_version must be 2")
+    try:
+        parsed_id = str(uuid.UUID(task_id))
+        task_ids[parsed_id].append(name)
+    except (ValueError, AttributeError):
+        hard.append(f"{name}: id '{task_id or 'none'}' is not a UUID")
     if st not in STATUS:
         hard.append(f"{name}: status '{st or 'none'}' not in vocabulary")
-    if comp not in ("true", "false"):
-        hard.append(f"{name}: completed '{comp or 'none'}' not boolean")
-    if (comp == "true") != (st == "done"):
-        hard.append(f"{name}: done/tick invariant (status={st}, completed={comp})")
-    if not DATE_RE.match(created):
+    for legacy in ("completed", "review_after"):
+        if legacy in fm:
+            hard.append(f"{name}: legacy field '{legacy}' is invalid in schema v2")
+    if created and not DATE_RE.match(created):
         hard.append(f"{name}: created '{created or 'none'}' not a date")
-    if st in OPEN:
-        if not DATE_RE.match(ra):
-            hard.append(f"{name}: open without a valid review_after")
-        if not lr:
-            try:
-                age = (date.today() - date.fromisoformat(created)).days
-            except ValueError:
-                age = 9999
-            (young_never if age <= 14 else stale_never).append(name)
-    else:
-        if ra == "" and created >= REVIEW_AFTER_SINCE:
-            hard.append(f"{name}: closed with review_after blanked (created {created})")
-        elif ra == "":
-            pre_rule_closed += 1
+    if st == "committed":
+        missing = [key for key in ("committed_at", "commitment_cycle") if not fmval(fm.get(key))]
+        if missing and fmval(fm.get("revision_required")) == "true":
+            revision_required.append(f"{name}: revision_required; missing {', '.join(missing)}")
+        elif missing:
+            hard.append(f"{name}: committed task missing {', '.join(missing)}")
+    elif any(fmval(fm.get(key)) for key in ("committed_at", "commitment_cycle", "commitment_until")):
+        hard.append(f"{name}: commitment fields present while status is {st}")
     if closed:
         if st not in ("done", "dropped"):
             hard.append(f"{name}: closed date set but status is {st}")
         elif not DATE_RE.match(closed):
             hard.append(f"{name}: closed '{closed}' not a date")
-    if fmval(fm.get("size")) not in ("small", "bigger"):
-        info.append(f"{name}: size '{fmval(fm.get('size')) or 'none'}' outside small|bigger")
+    elif st in ("done", "dropped"):
+        hard.append(f"{name}: closed status requires closed date")
     title = fmval(fm.get("title"))
     norm = ILLEGAL_RE.sub("", title.replace("/", "-"))
     if title and norm != name:
-        info.append(f"{name}: title diverges from filename ({title!r})")
+        hard.append(f"{name}: title diverges from filename ({title!r})")
     if not title:
         info.append(f"{name}: empty title")
     if fmval(fm.get("blocked")):
@@ -200,6 +204,10 @@ for r in sorted(x for x in md if area(x) == "Tasks"):
             if m and m.group(2) and m.group(2)[0] not in "\"'[{":
                 if ": " in m.group(2) or "[[" in m.group(2):
                     info.append(f"{name}: YAML-unsafe value: {line[:70]}")
+
+for task_id, names in sorted(task_ids.items()):
+    if len(names) > 1:
+        hard.append(f"duplicate task id {task_id}: {names}")
 
 # ---- structure ----
 root_entries = {r for r in files if "/" not in r}
@@ -280,12 +288,10 @@ show("HARD", hard_all)
 
 print("\n== TASK INTEGRITY (info) ==")
 info_task = [i for i in info if not i.startswith(("unexpected", "Untitled", "empty file", "non-note"))]
-show("never reviewed, open, young (<=14d)", young_never)
-show("never reviewed, open, stale", stale_never)
+show("migration revisions required", revision_required)
 show("blocked flags (review for staleness)", blocked_notes)
 show("other", [i for i in info_task if not any(i.startswith(p) for p in
               ("never reviewed",))][:20])
-print(f"closed without review_after, created before {REVIEW_AFTER_SINCE} (history): {pre_rule_closed}")
 
 print("\n== WIKI LAYER ==")
 print(f"content pages: {len(content)}")

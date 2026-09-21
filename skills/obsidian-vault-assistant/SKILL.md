@@ -1,102 +1,49 @@
 ---
 name: obsidian-vault-assistant
-description: "Use when managing the OEK Obsidian vault: capture, inbox sweep, task refinement, weekly planning, source ingest, wiki query/lint, dreams, or vault-to-repo handoff prep."
+description: "Use when managing the OEK Obsidian vault: capture, task context, planning, source ingest, wiki query/lint, dreams, or vault-to-repo handoff prep."
 ---
 
 # OEK Vault Assistant
 
-## Overview
+The vault is Olle's control tower. Keep task operations separate from the `Wiki/` knowledge layer. Durable knowledge belongs in `Wiki/`; transient agendas, checklists, and working notes belong in the task body or `Logs/`.
 
-The vault session is Olle's personal **control tower**: it plans and scopes, execution happens elsewhere. Keep two tracks separate — day-to-day productivity (`Inbox.md`, `Task Dashboard.base`, `Tasks/`) and the wiki/LLM knowledge layer (`Wiki/`).
-
-Two words run through everything below:
-
-- **durable** — knowledge that survives the task; belongs in `Wiki/`. The test: *"in six months, when I ask 'what do I know about X?', do I want this to surface?"*
-- **transient** — an artifact meaningful only for one task or meeting (agendas, prep, checklists, working notes); belongs in the **task note body** (or `Logs/` for traces), never in `Wiki/`.
-
-Vault path, always quoted (this is the working directory for every vault action):
+Vault path, always quoted:
 
 ```bash
 "/Users/ollekruber/Library/Mobile Documents/iCloud~md~obsidian/Documents/Oek Vault"
 ```
 
-## Start of Any Vault Conversation
+## Start of a vault conversation
 
 1. Read `.pi/memory.md`.
-2. **Report the Due count and offer to run it.** Due = open task notes whose `review_after` has arrived. It is the first line of every vault session, before anything else. Empty means healthy; a number means that many items are waiting for a verdict.
-3. If `last-swept` is not today, **or `Inbox.md` holds unprocessed bullets under `## New capture` / `## Pending Ingest`**, run the ambient sweep in this order (the stamp can be newer than the capture; content beats the stamp):
-   - classify plain bullets in `Inbox.md` (see Inbox classification);
-   - create/update task notes only when warranted, each with a `review_after` date;
-   - surface `Logs/dreams/Pending.md` proposals for approval;
-   - update `last-swept`.
-4. Announce changes in one compact line **carrying both numbers, intake and closures** ("filed 5, closed 0" is a legitimate report; omitting the second number is not).
+2. Report the Oek Work surface: committed work first, then available work.
+3. If `Inbox.md` has unprocessed capture, classify it and create schema-v2 `available` tasks only when warranted.
+4. Report intake and closures compactly. Closures must reflect explicit actions already taken by Olle in Oek.
 
-Do not use a calendar signal to trigger a review. "Last review was N days ago" failed through a four-week vacation, because it only reports what was missed. The Due queue is state-based: time away makes it longer, never overdue in a way that can be missed.
+## Task contract
 
-Use the actual current date.
+Read [`TASK-SYSTEM.md`](TASK-SYSTEM.md) before editing a task note.
 
-## Daily Task System
+- Statuses are `available | committed | done | dropped`.
+- The assistant may capture, clarify, add context, and create an `available` task using `oek-task create-available`.
+- Only an explicit Olle action in Oek may commit, release, close as done, or drop. Never infer these transitions from conversation, a handoff, an Explore run, or a worker result.
+- `Work` is the daily action surface. `Explore` is non-committing.
+- A worker result is evidence for review, not closure.
+- `size`, `outcome`, and `next_action` are optional enrichment, not gates.
+- `blocked` is context, not a lifecycle status.
 
-Human-facing surfaces:
+For multi-step repo work, use the `handoff` skill: ensure the task has useful context, write a brief under `Logs/handoffs/`, recommend an execution mode, and surface returned results without changing lifecycle state.
 
-| Surface | File | Purpose |
-|---|---|---|
-| Capture | `Inbox.md` | frictionless raw bullets, links, todos; no metadata required |
-| Triage | `Task Dashboard.base` → `Due` | items whose `review_after` has arrived, oldest first. Empty = healthy. The only surface that removes things from the system |
-| Plan/act | `Task Dashboard.base` | the sole task surface. Daily view = `Refine`, `This Week`; `Backlog` is an admin/reference view for planning, not daily navigation |
-| Rules | `Task System Runbook.md` | lifecycle, triage, dreaming, delegation notes |
+## Inbox classification
 
-Task notes stay one-note-per-task in `Tasks/` for automation, search, dreaming, and delegation. Task-note mechanics — filename/title format, frontmatter shape, YAML safety — live in [`TASK-SYSTEM.md`](TASK-SYSTEM.md); read it before creating or editing a task note.
-
-### Lifecycle
-
-Statuses: `refine | backlog | this-week | done | dropped`.
-
-**Every open note carries a `review_after` date.** Required on `refine`, `backlog`, and `this-week`; defaults are +7 days for refine and +30 for backlog. It is the only mechanism that returns an item to attention, and without it items rot silently. Registered as `date` in `.obsidian/types.json`, so keep it typed or the Due view stops matching.
-
-**An item that surfaces in Due leaves with one of five verdicts:** act (`this-week`), delegate (handoff brief), question (stays `refine`, with the specific question written into the note), park (new `review_after` **and** a one-line reason), or close (`done`/`dropped`). "Read it and moved on" is not a verdict. The same park reason twice means propose the drop.
-
-- **Only Olle** moves a task into `this-week`, `done`, or `dropped`.
-- The **assistant** may create `refine` notes and suggest backlog grooming or drops.
-- Vague items go to `refine`, not backlog. Backlog is inventory; surface stale items through review/dream recommendations.
-- **`blocked` is a flag, not a status.** A committed item that can't move keeps its `status` (usually `this-week`) and carries a `blocked:` field naming the blocker/owner (e.g. `blocked: "DNS PR review — separate team"`). Empty = active. The assistant may set/clear `blocked` for explicit handoffs/blockers; never change `status` to signal blocking.
-
-Full status meanings and the "who moves it" matrix are in [`TASK-SYSTEM.md`](TASK-SYSTEM.md).
-
-### Inbox classification
-
-- Raw link/reference → pending ingest recommendation; ingest deliberately, not in bulk.
-- Clear task → create a task note, `status: refine` unless Olle chooses `backlog` or `this-week`.
-- Vague task/idea → `status: refine` with open questions.
+- Raw link/reference → recommend deliberate source ingest.
+- Clear or vague task → create `available`; put questions in context rather than inventing a refinement status.
 - Ambition/reflection → `Wiki/Ambitions & Reflections.md`.
 - Noise → confirm, then archive; never delete silently.
 
-## Refinement and Dreaming
+## Knowledge layer
 
-Refinement is a lightweight "grill me" loop: ask only the questions needed to clarify outcome, next action, constraints, links, and whether it is human/delegable. Olle may skip clarification; skipped items stay eligible later.
-
-Dreaming may suggest drops, merges, stale backlog triage, agent candidates, simulated plans, preference memories, and connections. Dream outputs return through `Refine` or explicit recommendations; never hide new daily views.
-
-Future memory systems (`https://mem0.ai/`, `https://remnic.ai/`) are notes only — leave them un-integrated unless explicitly asked.
-
-## Handoffs
-
-The vault session scopes; execution happens elsewhere. For any multi-step repo task, use the `handoff` skill.
-
-Minimum vault-side action:
-
-1. Ensure the task note has repo/path/context/acceptance, or ask for the missing fields.
-2. Write a brief in `Logs/handoffs/YYYY-MM-DD-<slug>.md`.
-3. Recommend an execution mode: Orca worktree, non-Orca worktree, repo session, or subagent.
-4. Set the `blocked` flag only when an explicit external handoff/blocker exists; clear it when unblocked.
-
-Future agent delegation target is Orca (`https://www.onorca.dev/`); leave autonomous delegation unimplemented here.
-
-## Knowledge Layer
-
-`Wiki/` holds **durable** reference only. `Wiki/Sources/` keeps raw captures immutable after capture; curated pages live under `Wiki/`. **Transient** task byproducts stay on the task, never as `Wiki/` pages.
-
-Ingest and query flows, the layer/ownership table, and the durable-vs-transient test detail live in [`KNOWLEDGE.md`](KNOWLEDGE.md). A URL is a bookmark until materialized — ingest deliberately. For login-gated, paywalled, or anti-bot sources, capture with the `web-capture` skill.
+`Wiki/` holds durable reference. `Wiki/Sources/` keeps raw captures immutable after capture. Transient task byproducts stay on the task. Read [`KNOWLEDGE.md`](KNOWLEDGE.md) for ingest/query rules; use `web-capture` for gated sources and `guided-read` when explicitly requested.
 
 ## Lint
 
@@ -104,37 +51,14 @@ Ingest and query flows, the layer/ownership table, and the durable-vs-transient 
 python3 "$HOME/.agents/skills/obsidian-vault-assistant/tools/lint.py" "/Users/ollekruber/Library/Mobile Documents/iCloud~md~obsidian/Documents/Oek Vault"
 ```
 
-Indexes the whole vault (root, Sources, assets, `.base` files; Archive/Logs/docs as targets only) and reports: task-system integrity (status/completed/date validity, done⇄tick invariant, blanked `review_after`, title↔filename, YAML safety, size vocabulary), structure drift (root canon, strays, `Untitled` files, ambiguous basenames), the wiki layer (orphans by content-page metric and vault-wide, untyped, taxonomy gaps, near-duplicates), and broken links split into live (hard) and historical (informational). Exits 1 on hard issues only. Apply fixes only with approval, in proposed batches.
+The linter checks schema version, status, UUID presence and uniqueness, commitment and closure fields, dates, title/filename alignment, symlinks, managed frontmatter, structure, links, and the wiki layer. Migrated committed tasks with `revision_required: true` may lack commitment metadata and are informational. Apply fixes only with approval.
 
-## Natural Language Triggers
+## Integrity rules
 
-| User says | Do |
-|---|---|
-| "What's on my plate?" | Read `Task Dashboard.base`; summarize `Refine`, `This Week` counts/items |
-| "Sweep/tidy inbox" | Classify `Inbox.md`; move filed bullets out of inbox |
-| "Refine this" | Ask clarifying questions; update the task note |
-| "Plan this week" | Browse `Backlog`; pull items into `This Week` only by Olle choice |
-| "Hand this off" | Use `handoff`; write brief |
-| "Ingest/read/save this" | Capture source, then ingest deliberately (see `KNOWLEDGE.md`) |
-| "Guided read" (Olle pastes a link) | Use the `guided-read` skill: one frame card, reflect, distill proportionately, log |
-| "What do I know about X?" | Query `Wiki/` via index and relevant pages |
-| "Lint/health check" | Run lint, then report hard issues and informational findings as fix batches (status counts, never-reviewed, past-`review_after`, blocked flags included); apply only approved batches |
-| "What's due?" | List the Due queue oldest first; take each item to one of the five verdicts |
-| "Run/review a dream" | Surface dream proposals; apply only approved changes |
-
-## Vault integrity
-
-Non-negotiables, enforced by the linter:
-
-- Typed fields stay typed: `review_after` and `closed` as `date`, `completed` as `checkbox` in `.obsidian/types.json`. An untyped date silently breaks the Due filter.
-- `status: done` if and only if `completed: true`; the tick is never removed.
-- Every open note carries a valid `review_after`, and it is never blanked: closed notes keep the date they had.
-- On close, set `closed: YYYY-MM-DD`; never invent a past closure date.
-- Root holds primitives only; no `Untitled` notes, no zero-byte files, no subfolders in `Tasks/`. A new root file or top-level folder gets a runbook note first.
-- `blocked` is a flag, not a status: set on dispatch, cleared when the dispatch reports back; a dated blocker expires with its date.
-- The filename is the task name; `title` keeps the exact phrasing (see TASK-SYSTEM.md). New wikilinks must reference existing notes.
-
-## Hard Rules
-
-- Quote the vault path; archive instead of deleting; keep `Inbox.md` capture frictionless.
-- Keep the day-to-day task track separate from the wiki/knowledge track.
+- Every task has `schema_version: 2`, a unique UUID `id`, an allowed status, and an aligned title/filename.
+- `completed` and `review_after` are invalid legacy fields.
+- Committed tasks carry commitment metadata, except migrated `revision_required` items awaiting human review.
+- Done/dropped tasks carry a valid `closed` date.
+- Symlinks are forbidden in managed vault content; frontmatter must remain parseable and singular.
+- Root holds primitives only; no `Untitled` notes, zero-byte files, or subfolders in `Tasks/`.
+- Quote the vault path, archive instead of deleting, and preserve vault/wiki separation.
