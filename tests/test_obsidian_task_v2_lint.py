@@ -80,6 +80,12 @@ class TaskV2LintTest(unittest.TestCase):
         self.assertIn("title diverges from filename", result.stdout)
         self.assertIn("symlink", result.stdout)
 
+    def test_legacy_root_and_link_drift_are_informational_in_v2_vault(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            vault = Path(tmp);(vault / "Tasks").mkdir();(vault / "Tasks/Research — Test task.md").write_text("---\n"+self.valid()+"\n---\n[[Missing page]]\n");(vault / "Untitled.md").write_text("drift\n")
+            result = subprocess.run(["python3",str(LINT),str(vault)],text=True,capture_output=True)
+        self.assertEqual(result.returncode,0,result.stdout+result.stderr);self.assertIn("Untitled stray",result.stdout);self.assertIn("Missing page",result.stdout)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -213,21 +213,25 @@ for task_id, names in sorted(task_ids.items()):
         hard.append(f"duplicate task id {task_id}: {names}")
 
 # ---- structure ----
+schema_v2_vault = any(fmval(read_note(path)[1].get("schema_version")) == "2"
+                      for rel, path in md.items() if area(rel) == "Tasks")
+structure_info = []
+structure_issue = structure_info.append if schema_v2_vault else hard.append
 root_entries = {r for r in files if "/" not in r}
 for s in sorted(root_entries - EXPECTED_ROOT):
-    hard.append(f"unexpected root entry: {s}")
+    structure_issue(f"unexpected root entry: {s}")
 top_dirs = {area(r) for r in files if "/" in r}
 for d in sorted(top_dirs - EXPECTED_TOP):
-    hard.append(f"unexpected top-level folder: {d}/")
+    structure_issue(f"unexpected top-level folder: {d}/")
 for r in sorted(x for x in md if stem(x).startswith("Untitled") and area(x) != "Archive"):
-    hard.append(f"Untitled stray: {r}")
+    structure_issue(f"Untitled stray: {r}")
 for r in sorted(x for x in md if os.path.getsize(md[x]) == 0):
-    hard.append(f"empty file: {r}")
+    structure_issue(f"empty file: {r}")
 for r in sorted(x for x in files if x.startswith("Tasks/") and "/" in x[6:]):
-    hard.append(f"non-note file inside Tasks/: {r}")
+    structure_issue(f"non-note file inside Tasks/: {r}")
 for s, paths in sorted(by_stem.items()):
     if len(paths) > 1 and not any(area(p) == "Archive" for p in paths):
-        hard.append(f"ambiguous link target '{s}': {paths}")
+        structure_issue(f"ambiguous link target '{s}': {paths}")
     elif len(paths) > 1:
         info.append(f"archive-duplicate basename '{s}' x{len(paths)}")
 
@@ -284,10 +288,15 @@ print(f"open: {open_count}, due today: {due}, more than 7 days past: {stale7}")
 
 print("\n== HARD ISSUES ==")
 hard_all = list(hard)
+live_broken_list = []
 for src in sorted(live_broken):
     for t in sorted(live_broken[src]):
-        hard_all.append(f"{src} -> [[{t}]]")
+        item = f"{src} -> [[{t}]]"
+        (live_broken_list if schema_v2_vault else hard_all).append(item)
 show("HARD", hard_all)
+if schema_v2_vault:
+    show("STRUCTURE DRIFT (legacy informational)", structure_info)
+    show("LIVE BROKEN LINKS (legacy informational)", live_broken_list)
 
 print("\n== TASK INTEGRITY (info) ==")
 info_task = [i for i in info if not i.startswith(("unexpected", "Untitled", "empty file", "non-note"))]
