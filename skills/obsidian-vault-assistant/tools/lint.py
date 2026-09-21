@@ -188,7 +188,10 @@ for r in sorted(x for x in md if area(x) == "Tasks"):
         elif not DATE_RE.match(closed):
             hard.append(f"{name}: closed '{closed}' not a date")
     elif st in ("done", "dropped"):
-        hard.append(f"{name}: closed status requires closed date")
+        if fmval(fm.get("revision_required")) == "true":
+            revision_required.append(f"{name}: revision_required; historical closed date unknown")
+        else:
+            hard.append(f"{name}: closed status requires closed date")
     title = fmval(fm.get("title"))
     norm = ILLEGAL_RE.sub("", title.replace("/", "-"))
     if title and norm != name:

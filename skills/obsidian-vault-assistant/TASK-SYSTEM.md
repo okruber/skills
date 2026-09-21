@@ -47,6 +47,6 @@ oek-task create-available --vault "$OEK_VAULT" --text "One sentence"
 
 The assistant may add context and clarify a task. It may not commit, release, close, or drop. Explore is non-committing. A worker result is evidence to review, never an implicit close.
 
-Migrated committed tasks that lack commitment metadata carry `revision_required: true`. The linter reports these as informational until Olle reviews them. `blocked` is context, not a status.
+Migrated tasks that lack trustworthy historical commitment or closure dates carry `revision_required: true`. The linter reports these as informational until Olle reviews them; dates are never invented. `blocked` is context, not a status.
 
 Keep one parseable frontmatter block. Double-quote values containing `: `, a leading `#`/`[`/`{`, or wikilinks.

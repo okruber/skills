@@ -58,7 +58,7 @@ The linter checks schema version, status, UUID presence and uniqueness, commitme
 - Every task has `schema_version: 2`, a unique UUID `id`, an allowed status, and an aligned title/filename.
 - `completed` and `review_after` are invalid legacy fields.
 - Committed tasks carry commitment metadata, except migrated `revision_required` items awaiting human review.
-- Done/dropped tasks carry a valid `closed` date.
+- Done/dropped tasks carry a valid `closed` date, except migrated `revision_required` items whose historical closure date is unknown. Never invent one.
 - Symlinks are forbidden in managed vault content; frontmatter must remain parseable and singular.
 - Root holds primitives only; no `Untitled` notes, zero-byte files, or subfolders in `Tasks/`.
 - Quote the vault path, archive instead of deleting, and preserve vault/wiki separation.

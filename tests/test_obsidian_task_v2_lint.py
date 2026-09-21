@@ -63,6 +63,17 @@ class TaskV2LintTest(unittest.TestCase):
         result = self.run_lint({"Research — Test task.md": self.valid(created="")})
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 
+    def test_migrated_closed_without_historical_date_is_informational(self):
+        note = self.valid(status="done", revision_required="true")
+        result = self.run_lint({"Research — Test task.md": note})
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertIn("revision_required", result.stdout)
+
+    def test_new_closed_task_requires_closed_date(self):
+        result = self.run_lint({"Research — Test task.md": self.valid(status="done")})
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("closed status requires closed date", result.stdout)
+
     def test_title_filename_mismatch_and_symlink_are_hard(self):
         result = self.run_lint({"Wrong.md": self.valid()}, symlink=True)
         self.assertNotEqual(result.returncode, 0)
