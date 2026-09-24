@@ -102,6 +102,12 @@ orca worktree create \
 
 Use `id:<repoId>` after matching the task's absolute repo path to `orca repo list --json`. If no registered repo matches, add it with `orca repo add --path ...` or ask before dispatch. Do not pass a guessed repo selector.
 
+Link the session to its Oek task so it shows up in Oek's Needs you strip. The task ID is the `id` field in the source task note's frontmatter.
+
+```bash
+/Users/ollekruber/orca/workspaces/oek/oek-control-tower/bin/oek-link --task <task-id> --worktree <created-worktree-id>
+```
+
 Live-machine / global-config work (fresh agent session in the real checkout — NOT a worktree, per Rule 6a):
 
 ```bash
@@ -110,19 +116,13 @@ orca terminal wait --terminal <handle> --for tui-idle --timeout-ms 120000 --json
 orca terminal send --terminal <handle> --text "Handoff: read <absolute-brief-path>, propose a plan, and check in before making changes." --enter --json
 ```
 
-Report the created terminal handle back into the task note (`worktree:` field is fine for the pointer). `<agent>` defaults to **`pi`** (just another pi session) — use `claude`/`codex` only if the brief calls for it.
-
-Vault writeback after Orca dispatch:
-
-```yaml
-status: this-week   # or backlog — do NOT invent a status; keep the task's real commitment level
-blocked: "dispatched to Orca session"   # set/append only if the task is now waiting on that session/person; else leave empty
-repo: /absolute/path/to/repo
-handoff: "[[YYYY-MM-DD-<slug>]]"
-worktree: <orca-worktree-id>
+```bash
+/Users/ollekruber/orca/workspaces/oek/oek-control-tower/bin/oek-link --task <task-id> --terminal <handle>
 ```
 
-The vault has no `waiting` status — `blocked` is a flag, not a status (see `obsidian-vault-assistant`). Leave `status` as the task's true commitment (`this-week`/`backlog`) and use the `blocked:` field for the blocker/owner. If the task note uses a different existing field layout, preserve it and add the same facts without inventing nested `handoff.*` schemas.
+Report the created terminal handle back into the task note body. `<agent>` defaults to **`pi`** (just another pi session) — use `claude`/`codex` only if the brief calls for it.
+
+Vault writeback after Orca dispatch: do not set `blocked` for a dispatch. An agent working on a task is not a blocker, and Oek shows the session on the task once `oek-link` has run. Leave `status` unchanged. Append the brief link and the worktree or terminal handle to the task note body. If `oek-link` fails, report its error to Olle and record the handle in the task note body.
 
 Non-Orca repo:
 
@@ -172,3 +172,4 @@ Non-obvious traps (the inverses of the Core Rules are omitted):
 | Creating a worktree for live-config / global-install work | Use a fresh agent session in the real checkout (Rule 6a) — a worktree checkout is the wrong isolation |
 | Running the handoff as an async/background `subagent` | The executor is always a **visible** Orca session Olle can watch and interject in; a background subagent is opaque and non-interruptible (Rule 1a) |
 | Concluding Orca is unavailable because `command -v orca` is empty | The `/usr/local/bin/orca` shim can dangle (AppTranslocation); probe `orca status --json` / use the app-bundle binary before any fallback (Rule 6, Detecting Orca) |
+| Dispatching without `oek-link` | Run `oek-link` after spawning so the session appears on its task in Oek |
