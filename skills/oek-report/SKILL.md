@@ -16,7 +16,7 @@ Run `test -n "$OEK_RETURN_TOKEN" && echo ready`. If it prints nothing, the sessi
 Post a finding when you learn something the task note should keep: a fact, a decision Olle made, a link, or a constraint.
 
     printf '%s\n' "The repo pins FastAPI 0.115; upgrading is out of scope." > /tmp/oek-finding.md
-    /Users/ollekruber/orca/workspaces/oek/oek-control-tower/bin/oek-return finding /tmp/oek-finding.md
+    /Users/ollekruber/Documents/Personal/oek/bin/oek-return finding /tmp/oek-finding.md
 
 Keep one fact per finding. Keep it under a few sentences.
 
@@ -25,7 +25,7 @@ Keep one fact per finding. Keep it under a few sentences.
 Post a proposal when the task's outcome, next action, or blocker should change.
 
     printf '%s' "Draft the placement policy and review it with Melker." > /tmp/oek-next.md
-    /Users/ollekruber/orca/workspaces/oek/oek-control-tower/bin/oek-return proposal /tmp/oek-next.md --field next_action
+    /Users/ollekruber/Documents/Personal/oek/bin/oek-return proposal /tmp/oek-next.md --field next_action
 
 The field is one of `outcome`, `next_action`, or `blocked`. Olle accepts, edits, or dismisses it in Oek.
 
