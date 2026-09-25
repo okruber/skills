@@ -99,17 +99,14 @@ Use `id:<repoId>` after matching the task's absolute repo path to `orca repo lis
 
 Start the agent in the created worktree, then send it the brief. `oek-agent-command` prints the `pi` command with the model preset Olle last picked for work in Oek, or the configured default. When Olle names a model, add `--preset <id>`, for example `--preset sol`. The preset ids live in `oek_agent_models` in `/Users/ollekruber/Documents/Personal/oek/config/autopilot.config.json`. Stop if the command exits non-zero, because that means the preset is unknown.
 
+Link the session to its Oek task so it shows up in Oek's Needs you strip. Linking also gives the session a return token, so the worker can report progress and propose state changes with oek-return. The task ID is the `id` field in the source task note's frontmatter. Run `oek-link` after `orca terminal wait` and before `orca terminal send`, so the token exists before the worker reads the brief.
+
 ```bash
 agent_cmd="$(/Users/ollekruber/Documents/Personal/oek/bin/oek-agent-command --purpose work)" || exit 1
 orca terminal create --worktree id:<worktree-id> --title <task-slug> --command "cd <worktree-path> && $agent_cmd" --json
 orca terminal wait --terminal <handle> --for tui-idle --timeout-ms 120000 --json
-orca terminal send --terminal <handle> --text "Read <absolute-brief-path>. Work from this Orca worktree. Propose a short plan/outline and check in for approval BEFORE producing final artifacts (unless the brief says direct-execution). Write task artifacts (prep/agendas/notes) into the task note body, not the Wiki. Acceptance: <observable condition>. Return files changed, tests run, PR/worktree status, blockers, and vault updates needed." --enter --json
-```
-
-Link the session to its Oek task so it shows up in Oek's Needs you strip. The task ID is the `id` field in the source task note's frontmatter.
-
-```bash
 /Users/ollekruber/Documents/Personal/oek/bin/oek-link --task <task-id> --terminal <handle>
+orca terminal send --terminal <handle> --text "Read <absolute-brief-path>. Work from this Orca worktree. Propose a short plan/outline and check in for approval BEFORE producing final artifacts (unless the brief says direct-execution). Write task artifacts (prep/agendas/notes) into the task note body, not the Wiki. Acceptance: <observable condition>. Load the oek-report skill and report progress to Oek as you work. Return files changed, tests run, PR/worktree status, blockers, and vault updates needed." --enter --json
 ```
 
 Live-machine or global-config work uses a fresh agent session in the real checkout, not a worktree (Rule 6a):
@@ -118,8 +115,8 @@ Live-machine or global-config work uses a fresh agent session in the real checko
 agent_cmd="$(/Users/ollekruber/Documents/Personal/oek/bin/oek-agent-command --purpose work)" || exit 1
 orca terminal create --title <task-slug> --command "cd /abs/checkout && $agent_cmd" --json
 orca terminal wait --terminal <handle> --for tui-idle --timeout-ms 120000 --json
-orca terminal send --terminal <handle> --text "Handoff: read <absolute-brief-path>, propose a plan, and check in before making changes." --enter --json
 /Users/ollekruber/Documents/Personal/oek/bin/oek-link --task <task-id> --terminal <handle>
+orca terminal send --terminal <handle> --text "Handoff: read <absolute-brief-path>, propose a plan, and check in before making changes. Load the oek-report skill and report progress to Oek as you work." --enter --json
 ```
 
 Report the created terminal handle back into the task note body. The agent is `pi` with the resolved model preset. Use `claude` or `codex` in place of `$agent_cmd` only if the brief calls for it.
