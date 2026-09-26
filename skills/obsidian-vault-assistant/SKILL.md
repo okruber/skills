@@ -17,7 +17,7 @@ Vault path, always quoted:
 
 1. Read `.pi/memory.md`.
 2. Report the Oek Work surface: committed work first, then available work.
-3. If `Inbox.md` has unprocessed capture, classify it and create schema-v2 `available` tasks only when warranted.
+3. If Oek is running (`curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8787/api/captures` returns `200`), do not sweep `Inbox.md`, because Oek imports it into its Just in strip. Report the Just in count from that endpoint instead. If Oek is not running and `Inbox.md` has unprocessed capture, classify it and create schema-v2 `available` tasks only when warranted.
 4. Report intake and closures compactly. Closures must reflect explicit actions already taken by Olle in Oek.
 
 ## Task contract
