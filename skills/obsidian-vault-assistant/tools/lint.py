@@ -41,6 +41,23 @@ OPEN = {"available", "committed"}
 LINK_RE = re.compile(r"\[\[([^\]]+)\]\]")
 TYPE_RE = re.compile(r"#type/\w[\w-]*")
 DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
+AXES = {"professional": "week", "personal": "month"}
+WEEK_RE = re.compile(r"^(\d{4})-W(\d{2})$")
+MONTH_RE = re.compile(r"^(\d{4})-(\d{2})$")
+
+
+def cycle_kind(cycle):
+    week = WEEK_RE.match(cycle)
+    if week:
+        try:
+            date.fromisocalendar(int(week.group(1)), int(week.group(2)), 1)
+            return "week"
+        except ValueError:
+            return None
+    month = MONTH_RE.match(cycle)
+    if month and 1 <= int(month.group(2)) <= 12:
+        return "month"
+    return None
 ILLEGAL_RE = re.compile(r'[:*?"<>|#^\[\]\\]')
 FM_LINE_RE = re.compile(r"^([A-Za-z_][\w-]*):\s*(.*)$")
 
@@ -182,6 +199,17 @@ for r in sorted(x for x in md if area(x) == "Tasks"):
             hard.append(f"{name}: committed task missing {', '.join(missing)}")
     elif any(fmval(fm.get(key)) for key in ("committed_at", "commitment_cycle", "commitment_until")):
         hard.append(f"{name}: commitment fields present while status is {st}")
+    axis = fmval(fm.get("axis")).strip().casefold()
+    if axis and axis not in AXES:
+        hard.append(f"{name}: axis '{fmval(fm.get('axis'))}' must be professional or personal")
+    cycle = fmval(fm.get("commitment_cycle"))
+    if cycle:
+        kind = cycle_kind(cycle)
+        if kind is None:
+            hard.append(f"{name}: commitment_cycle '{cycle}' is neither YYYY-Www nor YYYY-MM")
+        elif axis in AXES and AXES[axis] != kind:
+            label = "weekly" if kind == "week" else "monthly"
+            revision_required.append(f"{name}: {label} cycle {cycle} on the {axis} axis")
     if closed:
         if st not in ("done", "dropped"):
             hard.append(f"{name}: closed date set but status is {st}")

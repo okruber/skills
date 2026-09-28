@@ -59,6 +59,40 @@ class TaskV2LintTest(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         self.assertIn("revision_required", result.stdout)
 
+    def committed(self, **overrides):
+        values = {"status": "committed", "committed_at": "2026-09-21T09:00:00+02:00"}
+        values.update(overrides)
+        return self.valid(**values)
+
+    def test_axis_values_are_professional_or_personal(self):
+        for axis in ("professional", "personal", "Personal"):
+            with self.subTest(axis=axis):
+                result = self.run_lint({"Research — Test task.md": self.valid(axis=axis)})
+                self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        result = self.run_lint({"Research — Test task.md": self.valid(axis="family")})
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("axis 'family'", result.stdout)
+
+    def test_week_and_month_cycle_ids_are_valid(self):
+        for axis, cycle in (("professional", "2026-W40"), ("personal", "2026-10")):
+            with self.subTest(cycle=cycle):
+                note = self.committed(axis=axis, commitment_cycle=cycle)
+                result = self.run_lint({"Research — Test task.md": note})
+                self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+    def test_malformed_cycle_id_is_hard(self):
+        for cycle in ("2026-13", "2026-W54", "next week"):
+            with self.subTest(cycle=cycle):
+                result = self.run_lint({"Research — Test task.md": self.committed(commitment_cycle=f'"{cycle}"')})
+                self.assertNotEqual(result.returncode, 0)
+                self.assertIn("commitment_cycle", result.stdout)
+
+    def test_cycle_kind_that_disagrees_with_axis_is_revision_required(self):
+        note = self.committed(axis="personal", commitment_cycle="2026-W39")
+        result = self.run_lint({"Research — Test task.md": note})
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertIn("weekly cycle 2026-W39 on the personal axis", result.stdout)
+
     def test_nullable_created_is_allowed(self):
         result = self.run_lint({"Research — Test task.md": self.valid(created="")})
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)

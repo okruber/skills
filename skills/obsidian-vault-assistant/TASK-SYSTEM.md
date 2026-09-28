@@ -4,7 +4,7 @@ Read this before creating or editing a note in `Tasks/`.
 
 ## Filename and title
 
-The filename is the readable task title. Use `Prefix — Action phrase`, preserve the exact phrase in `title`, and replace filename-illegal characters. Common prefixes are `Arrive`, `Builder Platform`, `Tenderdesk`, `imeto`, `Decksmith`, `Research`, and `Personal`.
+The filename is the readable task title. Use `Prefix — Action phrase`, preserve the exact phrase in `title`, and replace filename-illegal characters. Common prefixes are `Arrive`, `Builder Platform`, `Tenderdesk`, `imeto`, `Decksmith`, `Fidelio`, `Research`, and `Personal`. The prefix decides `area`, and a known area decides `axis` (see Life axes).
 
 ## Frontmatter
 
@@ -15,8 +15,10 @@ id: "<UUID>"
 title: <short title>
 status: available | committed | done | dropped
 created: YYYY-MM-DD        # may be blank on migrated history
+area:                      # title prefix when it is a known area; set by Oek
+axis: professional | personal   # blank until assigned
 committed_at:              # required while committed
-commitment_cycle:          # required while committed
+commitment_cycle:          # required while committed: YYYY-Www (Professional) or YYYY-MM (Personal)
 commitment_until:          # optional
 closed:                    # required for done/dropped
 blocked:
@@ -35,6 +37,12 @@ After cutover, create tasks only through the constrained CLI:
 ```bash
 oek-task create-available --vault "$OEK_VAULT" --text "One sentence"
 ```
+
+## Life axes
+
+Oek sets `area` and a mapped `axis` when it creates or renames a task. `Arrive`, `Builder Platform`, `imeto`, `Decksmith`, `Tenderdesk` and `Fidelio` map to `professional`, and `Personal` maps to `personal`. The mapping lives in `axes.area_map` in the Oek config. `Research` and unprefixed tasks stay blank until Olle clicks the Axis chip in Oek. Jev may suggest an axis from the title, but the assistant never sets or changes `axis` by hand.
+
+A commitment's cycle kind must match its axis: an ISO week such as `2026-W40` for Professional, and a calendar month such as `2026-10` for Personal. A mismatch is Revision required, which Olle settles in that axis's revision. The linter rejects any other cycle format and any other axis value.
 
 ## Status authority
 
