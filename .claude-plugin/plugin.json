@@ -6,6 +6,7 @@
     "./skills/editing-rendered-html",
     "./skills/handoff",
     "./skills/obsidian-vault-assistant",
-    "./skills/web-capture"
+    "./skills/web-capture",
+    "./skills/show-me"
   ]
 }
