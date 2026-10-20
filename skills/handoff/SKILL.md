@@ -106,7 +106,7 @@ agent_cmd="$(/Users/ollekruber/Documents/Personal/oek/bin/oek-agent-command --pu
 orca terminal create --worktree id:<worktree-id> --title <task-slug> --command "cd <worktree-path> && $agent_cmd" --json
 orca terminal wait --terminal <handle> --for tui-idle --timeout-ms 120000 --json
 /Users/ollekruber/Documents/Personal/oek/bin/oek-link --task <task-id> --terminal <handle>
-orca terminal send --terminal <handle> --text "Read <absolute-brief-path>. Work from this Orca worktree. Propose a short plan/outline and check in for approval BEFORE producing final artifacts (unless the brief says direct-execution). Write task artifacts (prep/agendas/notes) into the task note body, not the Wiki. Acceptance: <observable condition>. Load the oek-report skill and report progress to Oek as you work. Return files changed, tests run, PR/worktree status, blockers, and vault updates needed." --enter --json
+orca terminal send --terminal <handle> --text "Read <absolute-brief-path>. Work from this Orca worktree. Propose a short plan/outline and check in for approval BEFORE producing final artifacts (unless the brief says direct-execution). Write task artifacts (prep/agendas/notes) into the task note body, not the Wiki. Acceptance: <observable condition>. Load the oek-report skill, report progress to Oek as you work, and run oek-return finish when your work ends. Return files changed, tests run, PR/worktree status, blockers, and vault updates needed." --enter --json
 ```
 
 Live-machine or global-config work uses a fresh agent session in the real checkout, not a worktree (Rule 6a):
@@ -116,10 +116,12 @@ agent_cmd="$(/Users/ollekruber/Documents/Personal/oek/bin/oek-agent-command --pu
 orca terminal create --title <task-slug> --command "cd /abs/checkout && $agent_cmd" --json
 orca terminal wait --terminal <handle> --for tui-idle --timeout-ms 120000 --json
 /Users/ollekruber/Documents/Personal/oek/bin/oek-link --task <task-id> --terminal <handle>
-orca terminal send --terminal <handle> --text "Handoff: read <absolute-brief-path>, propose a plan, and check in before making changes. Load the oek-report skill and report progress to Oek as you work." --enter --json
+orca terminal send --terminal <handle> --text "Handoff: read <absolute-brief-path>, propose a plan, and check in before making changes. Load the oek-report skill, report progress to Oek as you work, and run oek-return finish when your work ends." --enter --json
 ```
 
 Report the created terminal handle back into the task note body. The agent is `pi` with the resolved model preset. Use `claude` or `codex` in place of `$agent_cmd` only if the brief calls for it.
+
+Decisions Olle states in the spawned session: the worker records them with `oek-return decision` and his verbatim quote, in that session. A worker's own completion claim is never authority. See the `oek-report` skill.
 
 Vault writeback after Orca dispatch: do not set `blocked` for a dispatch. An agent working on a task is not a blocker, and Oek shows the session on the task once `oek-link` has run. Leave `status` unchanged. Append the brief link and the worktree or terminal handle to the task note body. If `oek-link` fails, report its error to Olle and record the handle in the task note body.
 
@@ -172,4 +174,5 @@ Non-obvious traps (the inverses of the Core Rules are omitted):
 | Running the handoff as an async/background `subagent` | The executor is always a **visible** Orca session Olle can watch and interject in; a background subagent is opaque and non-interruptible (Rule 1a) |
 | Concluding Orca is unavailable because `command -v orca` is empty | The `/usr/local/bin/orca` shim can dangle (AppTranslocation); probe `orca status --json` / use the app-bundle binary before any fallback (Rule 6, Detecting Orca) |
 | Dispatching without `oek-link` | Run `oek-link` after spawning so the session appears on its task in Oek |
+| A brief that ends without `oek-return finish` | The worker runs `finish` last, so the session closes and does not show as Unknown |
 | Starting the agent with `--agent` or a bare `pi` | Start it with `oek-agent-command` so it uses Olle's model preset |

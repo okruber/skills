@@ -26,7 +26,7 @@ Read [`TASK-SYSTEM.md`](TASK-SYSTEM.md) before editing a task note.
 
 - Statuses are `available | committed | done | dropped`.
 - The assistant may capture, clarify, add context, and create an `available` task using `oek-task create-available`.
-- Only an explicit Olle action in Oek may commit, release, close as done, or drop. Never infer these transitions from conversation, a handoff, an Explore run, or a worker result.
+- Only Olle may commit, release, close as done, or drop. He does it in Oek, or he states the decision in a working session that records his words verbatim with `oek-return decision`. Never infer these transitions from a handoff, an Explore run, or a worker result.
 - `Work` is the daily action surface. `Explore` is non-committing.
 - A worker result is evidence for review, not closure.
 - `size`, `outcome`, and `next_action` are optional enrichment, not gates.
