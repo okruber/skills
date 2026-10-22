@@ -52,7 +52,7 @@ Status changes (`done`, `dropped`, `release`, `commit`) belong to Olle. When Oll
     printf '%s\n' "Yes, it's finished. Set it to done." > /tmp/oek-quote.md
     oek-return decision --status done --quote /tmp/oek-quote.md
 
-Add `--said-at <ISO 8601 time>` when he said it earlier than now. Oek applies the change in the task's own cycle: an ISO week for Professional tasks and a month for Personal tasks. A `commit` is refused while the task has no axis.
+Add `--said-at <ISO 8601 time>` when he said it earlier than now. `commit` marks the task Now and `release` clears the Now flag. Now is a flag: it has no cycle and does not expire.
 
 Rules for decisions:
 

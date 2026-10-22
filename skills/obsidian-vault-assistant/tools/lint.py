@@ -41,23 +41,9 @@ OPEN = {"available", "committed"}
 LINK_RE = re.compile(r"\[\[([^\]]+)\]\]")
 TYPE_RE = re.compile(r"#type/\w[\w-]*")
 DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
-AXES = {"professional": "week", "personal": "month"}
-WEEK_RE = re.compile(r"^(\d{4})-W(\d{2})$")
-MONTH_RE = re.compile(r"^(\d{4})-(\d{2})$")
-
-
-def cycle_kind(cycle):
-    week = WEEK_RE.match(cycle)
-    if week:
-        try:
-            date.fromisocalendar(int(week.group(1)), int(week.group(2)), 1)
-            return "week"
-        except ValueError:
-            return None
-    month = MONTH_RE.match(cycle)
-    if month and 1 <= int(month.group(2)) <= 12:
-        return "month"
-    return None
+AXES = {"professional", "personal"}
+# Dropped by the simplified schema; leftovers are reported, not rejected.
+REMOVED_FIELDS = ("acceptance", "context", "size", "tags", "last_reviewed", "commitment_cycle", "commitment_until")
 ILLEGAL_RE = re.compile(r'[:*?"<>|#^\[\]\\]')
 FM_LINE_RE = re.compile(r"^([A-Za-z_][\w-]*):\s*(.*)$")
 
@@ -192,24 +178,19 @@ for r in sorted(x for x in md if area(x) == "Tasks"):
     if created and not DATE_RE.match(created):
         hard.append(f"{name}: created '{created or 'none'}' not a date")
     if st == "committed":
-        missing = [key for key in ("committed_at", "commitment_cycle") if not fmval(fm.get(key))]
-        if missing and fmval(fm.get("revision_required")) == "true":
-            revision_required.append(f"{name}: revision_required; missing {', '.join(missing)}")
-        elif missing:
-            hard.append(f"{name}: committed task missing {', '.join(missing)}")
-    elif any(fmval(fm.get(key)) for key in ("committed_at", "commitment_cycle", "commitment_until")):
-        hard.append(f"{name}: commitment fields present while status is {st}")
+        if not fmval(fm.get("committed_at")):
+            if fmval(fm.get("revision_required")) == "true":
+                revision_required.append(f"{name}: revision_required; missing committed_at")
+            else:
+                hard.append(f"{name}: committed task missing committed_at")
+    elif fmval(fm.get("committed_at")):
+        hard.append(f"{name}: committed_at present while status is {st}")
+    for removed in REMOVED_FIELDS:
+        if removed in fm:
+            info.append(f"{name}: removed field '{removed}' is still present")
     axis = fmval(fm.get("axis")).strip().casefold()
     if axis and axis not in AXES:
         hard.append(f"{name}: axis '{fmval(fm.get('axis'))}' must be professional or personal")
-    cycle = fmval(fm.get("commitment_cycle"))
-    if cycle:
-        kind = cycle_kind(cycle)
-        if kind is None:
-            hard.append(f"{name}: commitment_cycle '{cycle}' is neither YYYY-Www nor YYYY-MM")
-        elif axis in AXES and AXES[axis] != kind:
-            label = "weekly" if kind == "week" else "monthly"
-            revision_required.append(f"{name}: {label} cycle {cycle} on the {axis} axis")
     if closed:
         if st not in ("done", "dropped"):
             hard.append(f"{name}: closed date set but status is {st}")

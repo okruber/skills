@@ -47,11 +47,12 @@ class TaskV2LintTest(unittest.TestCase):
         self.assertIn("legacy field 'review_after'", result.stdout)
         self.assertIn("duplicate task id", result.stdout)
 
-    def test_committed_requires_commitment_fields(self):
+    def test_committed_requires_only_committed_at(self):
         result = self.run_lint({"Research — Test task.md": self.valid(status="committed")})
         self.assertNotEqual(result.returncode, 0)
-        self.assertIn("committed_at", result.stdout)
-        self.assertIn("commitment_cycle", result.stdout)
+        self.assertIn("committed task missing committed_at", result.stdout)
+        result = self.run_lint({"Research — Test task.md": self.committed()})
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 
     def test_migrated_committed_revision_required_is_informational(self):
         note = self.valid(status="committed", revision_required="true")
@@ -73,25 +74,12 @@ class TaskV2LintTest(unittest.TestCase):
         self.assertNotEqual(result.returncode, 0)
         self.assertIn("axis 'family'", result.stdout)
 
-    def test_week_and_month_cycle_ids_are_valid(self):
-        for axis, cycle in (("professional", "2026-W40"), ("personal", "2026-10")):
-            with self.subTest(cycle=cycle):
-                note = self.committed(axis=axis, commitment_cycle=cycle)
-                result = self.run_lint({"Research — Test task.md": note})
-                self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-
-    def test_malformed_cycle_id_is_hard(self):
-        for cycle in ("2026-13", "2026-W54", "next week"):
-            with self.subTest(cycle=cycle):
-                result = self.run_lint({"Research — Test task.md": self.committed(commitment_cycle=f'"{cycle}"')})
-                self.assertNotEqual(result.returncode, 0)
-                self.assertIn("commitment_cycle", result.stdout)
-
-    def test_cycle_kind_that_disagrees_with_axis_is_revision_required(self):
-        note = self.committed(axis="personal", commitment_cycle="2026-W39")
+    def test_removed_fields_are_reported_but_not_rejected(self):
+        note = self.committed(commitment_cycle="2026-W40", acceptance='"It works."', size="small")
         result = self.run_lint({"Research — Test task.md": note})
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-        self.assertIn("weekly cycle 2026-W39 on the personal axis", result.stdout)
+        for field in ("commitment_cycle", "acceptance", "size"):
+            self.assertIn(f"removed field '{field}' is still present", result.stdout)
 
     def test_nullable_created_is_allowed(self):
         result = self.run_lint({"Research — Test task.md": self.valid(created="")})
