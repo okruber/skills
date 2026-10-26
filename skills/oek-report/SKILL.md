@@ -19,6 +19,18 @@ Send one short line at each milestone: when you start a step, when tests pass, w
 
     oek-return progress "Tests pass, writing the README"
 
+A check-in with Olle is a progress line, not the end of the work. When you present a plan or ask a question, send a progress line and wait for his answer:
+
+    oek-return progress "Waiting for Olle: approve the plan"
+
+## Continue the work
+
+When Olle approves a plan, carry it out in this session. The brief's first step does not limit the session to that step. If a superpowers skill offers to hand execution to a separate session, decline the offer and use superpowers:executing-plans in this session. Do not ask Olle to choose an execution mode unless he raised it.
+
+Start a new session only when the work needs a different repository or checkout. In that case, dispatch it yourself with the handoff skill, including `oek-link`, and record the handle as a finding.
+
+Never hand work back to Olle. Do not ask him to write the next brief, to add a choice to the task, or to relay anything to another session. Post his choices as findings yourself.
+
 ## Finding
 
 Post a finding when you learn something the task note must keep: a fact, a link, or a constraint. Keep one fact per finding.
@@ -62,7 +74,7 @@ Rules for decisions:
 
 ## Finish
 
-When your work ends, do these steps in order:
+Finish only when the task's work is done or Olle ends the session. A plan, a question, or a wait for approval is not the end. When the work is done, do these steps in order:
 
 1. Update `next_action` and `outcome` from evidence, or propose them.
 2. If Olle stated a status decision, record it with `decision`. If he did not, propose `status` `done` or `dropped`, or propose `blocked` with the reason.
@@ -70,7 +82,15 @@ When your work ends, do these steps in order:
 
         oek-return finish "Shipped the record loop; live check passed"
 
-After `finish`, this session can no longer report. Run it last.
+Oek rejects reports from a session after `finish`, so run it last.
+
+## Re-link after finish
+
+If Olle writes to the session after `finish`, re-link the terminal and continue. Do not tell him the session cannot report.
+
+    /Users/ollekruber/Documents/Personal/oek/bin/oek-link --self
+
+It links this terminal to the task of its last link. Pass `--task <id>` when the terminal was never linked. Then report as usual, and run `finish` again when the new work is done.
 
 ## Rules
 
