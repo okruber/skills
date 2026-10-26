@@ -25,7 +25,7 @@ Do not use for single vault edits, note grooming, or direct Q&A.
 3. **Execution session = repo/worktree.** Workers start in the target checkout or worktree, never in the vault.
 3. **Brief before dispatch.** Include repo/path, plan/spec path, acceptance, and return protocol. If the repo is ambiguous, ask or list candidates; do not guess.
 3a. **Propose-first is the default; direct execution is opt-in.** The dispatched session must first produce a short plan/outline and check in with Olle for approval **before** creating final artifacts (agendas, docs, code, PRs). Only run straight through to finished output when Olle explicitly asks for it (“just do it”, “execute”, “autonomous”, “no need to check with me”). Never put “execute it fully” in the dispatch prompt unless direct execution was specified.
-3b. **Task artifacts land on the task, not the Wiki.** A dispatched session's output is **transient** (see the `durable`/`transient` distinction in `obsidian-vault-assistant`), so the dispatch prompt must say where output goes; default is “write the result into the task note.”
+3b. **Task artifacts land on the task, not the Wiki.** A dispatched session's output is **transient** (see the `durable`/`transient` distinction in `obsidian-vault-assistant`), so the dispatch prompt must say where output goes. The default is “post the result with `oek-return finding`”, which Oek appends to the task note body. Never tell a linked worker to edit the task note itself, because `oek-report` forbids it and the worker stalls on the conflict.
 4. **Plans/specs are external.** From inside the target repo, resolve `superpowers-store plans` / `superpowers-store specs`; pass absolute paths. Do not assume repo `docs/` contains plans.
 5. **Orca owns Orca repos.** For Orca-managed repos, resolve the registered Orca repo, then use `orca worktree create` / `orca worktree rm`, not raw `git worktree`.
 6. **Orca dispatch is the default execution surface** — you spawn it (per Rule 2). For repo work, create a new Orca worktree under the correct registered repo, start the agent in it, and send it the brief. **Detect Orca robustly** — never conclude it is unavailable from `command -v orca` alone: the `/usr/local/bin/orca` shim is frequently a dangling AppTranslocation symlink even while Orca is installed and running. Probe `orca status --json`, and if the shim is missing use the app-bundle binary `/Applications/Orca.app/Contents/Resources/bin/orca` (see Detecting Orca). Only when the app itself is absent is Orca genuinely unavailable — and even then the fallback is another *visible* session (non-Orca worktree, or ask Olle), never a background subagent.
@@ -106,7 +106,7 @@ agent_cmd="$(/Users/ollekruber/Documents/Personal/oek/bin/oek-agent-command --pu
 orca terminal create --worktree id:<worktree-id> --title <task-slug> --command "cd <worktree-path> && $agent_cmd" --json
 orca terminal wait --terminal <handle> --for tui-idle --timeout-ms 120000 --json
 /Users/ollekruber/Documents/Personal/oek/bin/oek-link --task <task-id> --terminal <handle>
-orca terminal send --terminal <handle> --text "Read <absolute-brief-path>. Work from this Orca worktree. Propose a short plan/outline and check in for approval BEFORE producing final artifacts (unless the brief says direct-execution). Write task artifacts (prep/agendas/notes) into the task note body, not the Wiki. Acceptance: <observable condition>. Load the oek-report skill, report progress to Oek as you work, and run oek-return finish when your work ends. Return files changed, tests run, PR/worktree status, blockers, and vault updates needed." --enter --json
+orca terminal send --terminal <handle> --text "Read <absolute-brief-path>. Work from this Orca worktree. Propose a short plan/outline and check in for approval BEFORE producing final artifacts (unless the brief says direct-execution). Post task artifacts (prep/agendas/notes) to the task with oek-return finding, not to the Wiki. Acceptance: <observable condition>. Load the oek-report skill, report progress to Oek as you work, and run oek-return finish when your work ends. Return files changed, tests run, PR/worktree status, blockers, and vault updates needed." --enter --json
 ```
 
 Live-machine or global-config work uses a fresh agent session in the real checkout, not a worktree (Rule 6a):
@@ -155,7 +155,7 @@ Orca worktree under repo id:<repoId>, agent: codex.
 propose-first (default) — outline a plan and check in for approval before producing final artifacts. Use direct-execution only when Olle specified it.
 
 ## Return protocol
-Report files changed, tests run, PR/worktree status, blockers, and vault updates needed.
+Post the result to the task with `oek-return finding`: files changed, tests run, PR/worktree status, blockers, and vault updates needed. Do not edit the task note file.
 ```
 
 ## Common Mistakes
@@ -173,6 +173,7 @@ Non-obvious traps (the inverses of the Core Rules are omitted):
 | Creating a worktree for live-config / global-install work | Use a fresh agent session in the real checkout (Rule 6a) — a worktree checkout is the wrong isolation |
 | Running the handoff as an async/background `subagent` | The executor is always a **visible** Orca session Olle can watch and interject in; a background subagent is opaque and non-interruptible (Rule 1a) |
 | Concluding Orca is unavailable because `command -v orca` is empty | The `/usr/local/bin/orca` shim can dangle (AppTranslocation); probe `orca status --json` / use the app-bundle binary before any fallback (Rule 6, Detecting Orca) |
+| A return protocol that says to append or write the result into the task note | Say “post the result with `oek-return finding`”. A linked worker may not edit the task note, so the instruction conflicts with `oek-report` |
 | Dispatching without `oek-link` | Run `oek-link` after spawning so the session appears on its task in Oek |
 | A brief that ends without `oek-return finish` | The worker runs `finish` last, so the session closes and does not show as Unknown |
 | Starting the agent with `--agent` or a bare `pi` | Start it with `oek-agent-command` so it uses Olle's model preset |

@@ -75,5 +75,6 @@ After `finish`, this session can no longer report. Run it last.
 ## Rules
 
 - Never edit the task note file or its frontmatter yourself. Use the commands above.
+- A brief may say to append or write the result into the task note. Post that result with `oek-return finding` instead, because Oek appends findings to the task note body. Do not ask Olle which instruction wins. Edit the note directly only when the link check fails with exit code 78.
 - Report when something becomes true, not only at the end.
 - A failed report prints the HTTP error. Tell Olle in the session, because Oek may not be running.
