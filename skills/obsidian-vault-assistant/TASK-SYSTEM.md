@@ -95,6 +95,6 @@ A session linked with `oek-link` keeps the task record current through `oek-retu
 
 Do not edit `next_action`, `outcome`, or `status` in the note by hand while Oek runs. Use these commands, or Oek's own controls.
 
-Migrated tasks that lack trustworthy historical Now or closure dates carry `revision_required: true`. The linter reports these as informational until Olle reviews them; dates are never invented. `blocked` is context, not a status.
+Tasks closed before the 2026-09-21 cutover may have a blank `closed` date, because the real date is unknown, and the linter counts them in one line. A migrated Now task without a trustworthy `committed_at` carries `revision_required: true` until Olle reviews it. Dates are never invented. `blocked` is context, not a status.
 
 Keep one parseable frontmatter block. Double-quote values containing `: `, a leading `#`/`[`/`{`, or wikilinks.

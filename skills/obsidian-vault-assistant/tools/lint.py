@@ -30,7 +30,7 @@ REVIEW_AFTER_SINCE = "2026-08-19"
 EXPECTED_ROOT = {
     "Inbox.md", "Task Dashboard.base", "Task System Runbook.md",
     "Vault Workflow (START HERE).md", "AGENTS.md", "Reading Queue.md",
-    "Meeting Transcription Runbook.md",
+    "Meeting Transcription Runbook.md", "Oek — Getting Started.md",
 }
 EXPECTED_TOP = {"Tasks", "Wiki", "Logs", "Archive", "docs", "pi", "Topics"}
 HIST_AREAS = {"Archive", "Logs", "docs"}
@@ -42,6 +42,8 @@ LINK_RE = re.compile(r"\[\[([^\]]+)\]\]")
 TYPE_RE = re.compile(r"#type/\w[\w-]*")
 DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 AXES = {"professional", "personal"}
+# Tasks closed before the schema-v2 cutover may lack a closed date; it is never invented.
+CUTOVER = "2026-09-21"
 # Dropped by the simplified schema; leftovers are reported, not rejected.
 REMOVED_FIELDS = ("acceptance", "context", "size", "tags", "last_reviewed", "commitment_cycle", "commitment_until")
 ILLEGAL_RE = re.compile(r'[:*?"<>|#^\[\]\\]')
@@ -149,6 +151,7 @@ today = date.today().isoformat()
 status_counts = Counter()
 task_ids = defaultdict(list)
 revision_required = []
+undated_closures = 0
 blocked_notes = []
 for r in sorted(x for x in md if area(x) == "Tasks"):
     text, fm, _ = read_note(md[r])
@@ -197,8 +200,8 @@ for r in sorted(x for x in md if area(x) == "Tasks"):
         elif not DATE_RE.match(closed):
             hard.append(f"{name}: closed '{closed}' not a date")
     elif st in ("done", "dropped"):
-        if fmval(fm.get("revision_required")) == "true":
-            revision_required.append(f"{name}: revision_required; historical closed date unknown")
+        if DATE_RE.match(created or "") and created < CUTOVER:
+            undated_closures += 1
         else:
             hard.append(f"{name}: closed status requires closed date")
     title = fmval(fm.get("title"))
@@ -310,6 +313,7 @@ if schema_v2_vault:
 print("\n== TASK INTEGRITY (info) ==")
 info_task = [i for i in info if not i.startswith(("unexpected", "Untitled", "empty file", "non-note"))]
 show("migration revisions required", revision_required)
+print(f"\nclosed before the {CUTOVER} cutover without a closed date: {undated_closures}")
 show("blocked flags (review for staleness)", blocked_notes)
 show("other", [i for i in info_task if not any(i.startswith(p) for p in
               ("never reviewed",))][:20])

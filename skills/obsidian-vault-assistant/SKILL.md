@@ -15,7 +15,7 @@ Vault path, always quoted:
 
 ## Start of a vault conversation
 
-1. Read `.pi/memory.md`.
+1. Read `.pi/memory.md`. Keep it short: record a session in a few lines and move superseded entries to `Archive/memory/`.
 2. Report the Oek Work surface: committed work first, then available work.
 3. If Oek is running (`curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8787/api/captures` returns `200`), do not sweep `Inbox.md`, because Oek imports it into its Just in strip. Report the Just in count from that endpoint instead. If Oek is not running and `Inbox.md` has unprocessed capture, classify it and create schema-v2 `available` tasks only when warranted.
 4. Report intake and closures compactly. Closures must reflect explicit actions already taken by Olle in Oek.
@@ -58,7 +58,7 @@ The linter checks schema version, status, UUID presence and uniqueness, commitme
 - Every task has `schema_version: 2`, a unique UUID `id`, an allowed status, and an aligned title/filename.
 - `completed` and `review_after` are invalid legacy fields.
 - Committed tasks carry commitment metadata, except migrated `revision_required` items awaiting human review.
-- Done/dropped tasks carry a valid `closed` date, except migrated `revision_required` items whose historical closure date is unknown. Never invent one.
+- Done/dropped tasks carry a valid `closed` date, except tasks closed before the 2026-09-21 cutover whose closure date is unknown. Never invent one.
 - Symlinks are forbidden in managed vault content; frontmatter must remain parseable and singular.
 - Root holds primitives only; no `Untitled` notes, zero-byte files, or subfolders in `Tasks/`.
 - Quote the vault path, archive instead of deleting, and preserve vault/wiki separation.
