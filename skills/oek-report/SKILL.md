@@ -107,4 +107,5 @@ It links this terminal to the task of its last link. Pass `--task <id>` when the
 - Never edit the task note file or its frontmatter yourself. Use the commands above.
 - A brief may say to append or write the result into the task note. Post that result with `oek-return finding` instead, because Oek appends findings to the task note body. Do not ask Olle which instruction wins. Edit the note directly only when the link check fails with exit code 78.
 - Report when something becomes true, not only at the end.
+- When you name a task to Olle, write `T-142 · <title>`, as the launch brief does. If the task has no id yet, write the title alone.
 - A failed report prints the HTTP error. Tell Olle in the session, because Oek may not be running.
