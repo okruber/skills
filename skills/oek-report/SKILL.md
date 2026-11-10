@@ -33,6 +33,14 @@ The question is one line of at most 160 characters. Give at most 4 options. Add 
 
 Oek types Olle's answer into this terminal as a new message that starts with `Olle answered your Oek ask`. Keep working on other steps, or wait. Do not finish while your ask is open, unless Olle ends the session.
 
+## Present a plan
+
+A plan lists only the steps of the task's work: what you find out, change, write or send. Reporting to Oek is not a plan step. Never number "record in Oek", "post a finding" or "set the next action" as a step for Olle to approve.
+
+Put the Oek record in its own short section after the steps, headed "In Oek". It names the findings you will post and the `next_action`, `outcome` or `status` you will update or propose. Olle does not approve this section, because he confirms every state change in Oek.
+
+If an Oek line hides a scope choice, such as whether you change another repository, make that choice a plan step or the question. The plan file you attach to the ask uses the same two parts.
+
 ## Continue the work
 
 When Olle approves a plan, carry it out in this session. The brief's first step does not limit the session to that step. If a superpowers skill offers to hand execution to a separate session, decline the offer and use superpowers:executing-plans in this session. Do not ask Olle to choose an execution mode unless he raised it.
