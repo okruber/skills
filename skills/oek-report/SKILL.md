@@ -43,7 +43,7 @@ If an Oek line hides a scope choice, such as whether you change another reposito
 
 ## Continue the work
 
-When Olle approves a plan, carry it out in this session. The brief's first step does not limit the session to that step. If a superpowers skill offers to hand execution to a separate session, decline the offer and use superpowers:executing-plans in this session. Do not ask Olle to choose an execution mode unless he raised it.
+When Olle approves a plan, carry it out in this session. When the brief says `direct-execution` or says that Olle approved the plan, implement that plan without presenting a new one. Ask Olle only about a choice the plan does not cover. The brief's first step does not limit the session to that step. If a superpowers skill offers to hand execution to a separate session, decline the offer and use superpowers:executing-plans in this session. Do not ask Olle to choose an execution mode unless he raised it.
 
 Start a new session only when the work needs a different repository or checkout. In that case, dispatch it yourself with the handoff skill, including `oek-link`, and record the handle as a finding.
 
@@ -75,6 +75,16 @@ Post a proposal when the `blocked` field must change, or when a `next_action` or
 
 A proposal is a field value, not a request to Olle. The field is one of `outcome`, `next_action`, `blocked`, or `status`. A `status` proposal is exactly `done` or `dropped`. A new proposal supersedes the pending proposal for the same field, so post your current view, not a list of alternatives.
 
+## Follow-up
+
+Post a follow-up when the work leaves new work that belongs in its own task. Oek offers it to Olle as a new task.
+
+    printf '%s\n' "Builder Platform — Add owner lines for the 3 remaining apps" > /tmp/oek-followup.md
+    printf '%s\n' "The quota fix shipped. Three app owners must still add their lines." > /tmp/oek-summary.md
+    oek-return followup /tmp/oek-followup.md --summary /tmp/oek-summary.md
+
+The first line is the task title, in the form `Prefix — Action phrase`.
+
 ## Decision
 
 Status changes (`done`, `dropped`, `release`, `commit`) belong to Olle. When Olle states one of these decisions in this session, record it in the same session with his words, verbatim:
@@ -94,9 +104,10 @@ Rules for decisions:
 
 Finish only when the task's work is done or Olle ends the session. A plan, a question, or a wait for approval is not the end. When the work is done, do these steps in order:
 
-1. Update `next_action` and `outcome` from evidence, or propose them.
-2. If Olle stated a status decision, record it with `decision`. If he did not, propose `status` `done` or `dropped`, or propose `blocked` with the reason.
-3. Run `finish` with one line that says where the work stands. It records the final checkpoint and closes the session link, so the session does not show as Unknown in Oek.
+1. Close the open ends. List every item that is still open: a pull request that waits for a merge or review, a check that only Olle can run, a step for another person, or work you found but did not do. For each item, post an ask when Olle must act, or a follow-up when it is new work. Never leave an open item only in the finish line.
+2. Update `next_action` and `outcome` from evidence, or propose them.
+3. If Olle stated a status decision, record it with `decision`. If he did not, propose `status` `done` or `dropped`, or propose `blocked` with the reason.
+4. Run `finish` with one line that says where the work stands and names the asks and follow-ups from step 1. It records the final checkpoint and closes the session link, so the session does not show as Unknown in Oek.
 
         oek-return finish "Shipped the record loop; live check passed"
 

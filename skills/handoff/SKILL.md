@@ -24,7 +24,7 @@ Do not use for single vault edits, note grooming, or direct Q&A.
 2. **The handoff gets spawned for you - do not hand Olle a command to run.** The whole point of a handoff is that it is *invoked* via Orca (`orca worktree create`, then `orca terminal create ... --command "cd <worktree> && $agent_cmd"` for repo work, or `orca terminal create ... --command "cd <checkout> && $agent_cmd"` for live-machine work, where `$agent_cmd` comes from `oek-agent-command`), seeded with the brief, and the created session reported back. Under Clean Dispatch the forked subagent does this spawning; otherwise the orchestrator does it directly. Giving Olle a copy-paste `read <brief>` command is an **anti-pattern** — only acceptable when Olle explicitly says he will start it himself. If you catch yourself writing "open a session and run…" for Olle, stop and dispatch it instead.
 3. **Execution session = repo/worktree.** Workers start in the target checkout or worktree, never in the vault.
 3. **Brief before dispatch.** Include repo/path, plan/spec path, acceptance, and return protocol. If the repo is ambiguous, ask or list candidates; do not guess.
-3a. **Propose-first is the default; direct execution is opt-in.** The dispatched session must first produce a short plan/outline and check in with Olle for approval **before** creating final artifacts (agendas, docs, code, PRs). Only run straight through to finished output when Olle explicitly asks for it (“just do it”, “execute”, “autonomous”, “no need to check with me”). Never put “execute it fully” in the dispatch prompt unless direct execution was specified. Once Olle approves, the same session carries out the work. It does not hand execution to another session or back to Olle.
+3a. **Plan once: where Olle approved the plan decides the approval mode.** If Olle approved a plan in this session for the work you dispatch, dispatch in `direct-execution` and put the approved plan in the brief. The dispatched session implements it and does not present a second plan. It asks Olle only when it hits a choice the plan does not cover. If no plan was approved, dispatch in `propose-first`: the dispatched session produces a short plan and checks in with Olle before it creates final artifacts (agendas, docs, code, PRs). Olle can also ask for direct execution in words such as “just do it” or “execute”. Once Olle approves, the same session carries out the work. It does not hand execution to another session or back to Olle.
 3b. **Task artifacts land on the task, not the Wiki.** A dispatched session's output is **transient** (see the `durable`/`transient` distinction in `obsidian-vault-assistant`), so the dispatch prompt must say where output goes. The default is “post the result with `oek-return finding`”, which Oek appends to the task note body. Never tell a linked worker to edit the task note itself, because `oek-report` forbids it and the worker stalls on the conflict.
 4. **Plans/specs are external.** From inside the target repo, resolve `superpowers-store plans` / `superpowers-store specs`; pass absolute paths. Do not assume repo `docs/` contains plans.
 5. **Orca owns Orca repos.** For Orca-managed repos, resolve the registered Orca repo, then use `orca worktree create` / `orca worktree rm`, not raw `git worktree`.
@@ -38,13 +38,13 @@ Do not use for single vault edits, note grooming, or direct Q&A.
 
 Dispatch a **forked-context** subagent (via the `pi-subagents` / `subagent` tool) with a task like:
 
-> Fork of this orchestrator context. Follow the `handoff` skill. Author a handoff brief for: `<the tangent/feature to spin off>`, drawing the relevant Goal/Context/Acceptance from this session. Write the brief to the vault handoffs dir (`.../Oek Vault/Logs/handoffs/YYYY-MM-DD-<slug>.md`). Then spawn the execution session via Orca (worktree for isolated repo work, or a fresh session in the real checkout for live/global-config work per Rule 6a), seed it with the brief, and set the spawned session to propose-first unless told otherwise. Return ONLY a terse pointer: the created worktree/terminal handle, the brief path, and the vault writeback needed. Do not paste the full brief or transcript back.
+> Fork of this orchestrator context. Follow the `handoff` skill. Author a handoff brief for: `<the tangent/feature to spin off>`, drawing the relevant Goal/Context/Acceptance from this session. Write the brief to the vault handoffs dir (`.../Oek Vault/Logs/handoffs/YYYY-MM-DD-<slug>.md`). Then spawn the execution session via Orca (worktree for isolated repo work, or a fresh session in the real checkout for live/global-config work per Rule 6a), seed it with the brief, and set the approval mode per Rule 3a: `direct-execution` with the approved plan in the brief when Olle approved a plan in this session, `propose-first` otherwise. Return ONLY a terse pointer: the created worktree/terminal handle, the brief path, and the vault writeback needed. Do not paste the full brief or transcript back.
 
 Rules for clean dispatch:
 - **Context = fork**, so the subagent knows what "feature X" and the surrounding decisions are without the orchestrator dumping them into a task string.
 - The subagent is the one that runs `orca ...` and writes files - that keeps those tool calls out of the parent transcript.
 - The parent's only new context is the subagent call + its terse result. Surface that pointer to Olle and continue coordinating.
-- The spawned execution session still follows every rule below (brief contract, propose-first default, worktree-vs-live 6a, vault writeback).
+- The spawned execution session still follows every rule below (brief contract, approval mode per Rule 3a, worktree-vs-live 6a, vault writeback).
 - The forked subagent's job **ends** at authoring the brief and spawning the visible session. It never runs the implementation and never becomes an async executor.
 
 ## Handoff Brief Contract
@@ -61,7 +61,7 @@ Required fields:
 | Context | Decisions, links, constraints |
 | Acceptance | Observable done condition |
 | Execution mode | Orca worktree, non-Orca worktree, existing repo session, or subagent |
-| Approval mode | `propose-first` (default) or `direct-execution` (only when Olle specified it) |
+| Approval mode | `direct-execution` when Olle approved the plan in the dispatching session (the brief carries the plan), else `propose-first` (Rule 3a) |
 | Return protocol | What to report/update back in the vault |
 
 ## Commands
@@ -106,7 +106,7 @@ agent_cmd="$(/Users/ollekruber/Documents/Personal/oek/bin/oek-agent-command --pu
 orca terminal create --worktree id:<worktree-id> --title <task-slug> --command "cd <worktree-path> && $agent_cmd" --json
 orca terminal wait --terminal <handle> --for tui-idle --timeout-ms 120000 --json
 /Users/ollekruber/Documents/Personal/oek/bin/oek-link --task <task-id> --terminal <handle>
-orca terminal send --terminal <handle> --text "Read <absolute-brief-path>. Work from this Orca worktree. Propose a short plan/outline and check in for approval BEFORE producing final artifacts (unless the brief says direct-execution). Post task artifacts (prep/agendas/notes) to the task with oek-return finding, not to the Wiki. Acceptance: <observable condition>. Once Olle approves, carry out the work in this session. Load the oek-report skill, report progress to Oek as you work, and run oek-return finish only when the work is done or Olle ends the session. Return files changed, tests run, PR/worktree status, blockers, and vault updates needed." --enter --json
+orca terminal send --terminal <handle> --text "Read <absolute-brief-path>. Work from this Orca worktree. <approval sentence> Post task artifacts (prep/agendas/notes) to the task with oek-return finding, not to the Wiki. Acceptance: <observable condition>. Once Olle approves, carry out the work in this session. Load the oek-report skill, report progress to Oek as you work, and run oek-return finish only when the work is done or Olle ends the session. Return files changed, tests run, PR/worktree status, blockers, and vault updates needed." --enter --json
 ```
 
 Live-machine or global-config work uses a fresh agent session in the real checkout, not a worktree (Rule 6a):
@@ -116,8 +116,13 @@ agent_cmd="$(/Users/ollekruber/Documents/Personal/oek/bin/oek-agent-command --pu
 orca terminal create --title <task-slug> --command "cd /abs/checkout && $agent_cmd" --json
 orca terminal wait --terminal <handle> --for tui-idle --timeout-ms 120000 --json
 /Users/ollekruber/Documents/Personal/oek/bin/oek-link --task <task-id> --terminal <handle>
-orca terminal send --terminal <handle> --text "Handoff: read <absolute-brief-path>, propose a plan, and check in before making changes. Once Olle approves, carry out the work in this session. Load the oek-report skill, report progress to Oek as you work, and run oek-return finish only when the work is done or Olle ends the session." --enter --json
+orca terminal send --terminal <handle> --text "Handoff: read <absolute-brief-path>. <approval sentence> Once Olle approves, carry out the work in this session. Load the oek-report skill, report progress to Oek as you work, and run oek-return finish only when the work is done or Olle ends the session." --enter --json
 ```
+
+The `<approval sentence>` follows Rule 3a:
+
+- `direct-execution`: "Olle approved the plan in the brief. Implement it now without presenting a new plan, and ask only about choices the plan does not cover."
+- `propose-first`: "Propose a short plan and check in for approval BEFORE producing final artifacts."
 
 Report the created terminal handle back into the task note body. The agent is `pi` with the resolved model preset. Use `claude` or `codex` in place of `$agent_cmd` only if the brief calls for it.
 
@@ -152,7 +157,8 @@ Absolute path and Orca repo id when available.
 Orca worktree under repo id:<repoId>, agent: codex.
 
 ## Approval mode
-propose-first (default) — outline a plan and check in for approval before producing final artifacts. Use direct-execution only when Olle specified it.
+direct-execution — Olle approved this plan in the dispatching session: <the approved plan or its absolute path>. Implement it without a new plan.
+(or) propose-first — no plan is approved yet. Outline a plan and check in for approval before producing final artifacts.
 
 ## Return protocol
 Post the result to the task with `oek-return finding`: files changed, tests run, PR/worktree status, blockers, and vault updates needed. Do not edit the task note file.
@@ -176,5 +182,6 @@ Non-obvious traps (the inverses of the Core Rules are omitted):
 | A return protocol that says to append or write the result into the task note | Say “post the result with `oek-return finding`”. A linked worker may not edit the task note, so the instruction conflicts with `oek-report` |
 | Dispatching without `oek-link` | Run `oek-link` after spawning so the session appears on its task in Oek |
 | A brief that ends without `oek-return finish` | The worker runs `finish` last, so the session closes and does not show as Unknown |
+| Dispatching in propose-first after Olle approved the plan in this session | Dispatch in direct-execution with the approved plan in the brief, so Olle does not approve a second plan (Rule 3a) |
 | A brief that says to finish when the plan is written | The worker finishes when the work is done. A plan check-in is a progress line, and the same session executes after approval |
 | Starting the agent with `--agent` or a bare `pi` | Start it with `oek-agent-command` so it uses Olle's model preset |
