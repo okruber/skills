@@ -86,11 +86,13 @@ Start the agent in the created worktree, then send it the brief. `oek-agent-comm
 
 Link the session to its Oek task so it shows up in Oek's Needs you strip. Linking also gives the session a return token, so the worker can report progress and propose state changes with oek-return. The task ID is the `id` field in the source task note's frontmatter. Run `oek-link` after `orca terminal wait` and before `orca terminal send`, so the token exists before the worker reads the brief.
 
+`--parent-session self` makes Oek send the worker's finish back to this session. If `oek-link` exits 69, this terminal is not linked to Oek. Run the same command again without `--parent-session self`.
+
 ```bash
 agent_cmd="$(/Users/ollekruber/Documents/Personal/oek/bin/oek-agent-command --purpose work)" || exit 1
 orca terminal create --worktree id:<worktree-id> --title <task-slug> --command "cd <worktree-path> && $agent_cmd" --json
 orca terminal wait --terminal <handle> --for tui-idle --timeout-ms 120000 --json
-/Users/ollekruber/Documents/Personal/oek/bin/oek-link --task <task-id> --terminal <handle>
+/Users/ollekruber/Documents/Personal/oek/bin/oek-link --task <task-id> --terminal <handle> --parent-session self
 orca terminal send --terminal <handle> --text "Read <absolute-brief-path>. Work from this Orca worktree. <approval sentence> Post task artifacts (prep/agendas/notes) to the task with oek-return finding, not to the Wiki. Acceptance: <observable condition>. Once Olle approves, carry out the work in this session. Load the oek-report skill, report progress to Oek as you work, and run oek-return finish only when the work is done or Olle ends the session. Return files changed, tests run, PR/worktree status, blockers, and vault updates needed." --enter --json
 ```
 
@@ -100,7 +102,7 @@ Live-machine or global-config work uses a fresh agent session in the real checko
 agent_cmd="$(/Users/ollekruber/Documents/Personal/oek/bin/oek-agent-command --purpose work)" || exit 1
 orca terminal create --title <task-slug> --command "cd /abs/checkout && $agent_cmd" --json
 orca terminal wait --terminal <handle> --for tui-idle --timeout-ms 120000 --json
-/Users/ollekruber/Documents/Personal/oek/bin/oek-link --task <task-id> --terminal <handle>
+/Users/ollekruber/Documents/Personal/oek/bin/oek-link --task <task-id> --terminal <handle> --parent-session self
 orca terminal send --terminal <handle> --text "Handoff: read <absolute-brief-path>. <approval sentence> Once Olle approves, carry out the work in this session. Load the oek-report skill, report progress to Oek as you work, and run oek-return finish only when the work is done or Olle ends the session." --enter --json
 ```
 
