@@ -33,6 +33,12 @@ The question is one line of at most 160 characters. Give at most 4 options. Add 
 
 Oek types Olle's answer into this terminal as a new message that starts with `Olle answered your Oek ask`. Keep working on other steps, or wait. Do not finish while your ask is open, unless Olle ends the session.
 
+When Olle answers an open ask in this terminal instead of in Oek, close the ask in Oek with his answer:
+
+    oek-return resolve "Friday"
+
+It prints `200` and the id of the ask it closed. If the session has more than one open ask, name the ask with `--ask <id>`, the id that `ask` printed. A resolve with no open ask prints `no open ask` and changes nothing.
+
 ## Present a plan
 
 A plan lists only the steps of the task's work: what you find out, change, write or send. Reporting to Oek is not a plan step. Never number "record in Oek", "post a finding" or "set the next action" as a step for Olle to approve.
@@ -73,7 +79,16 @@ Post a proposal when the `blocked` field must change, or when a `next_action` or
     printf '%s' "Waiting on Melker's review of the placement policy." > /tmp/oek-blocked.md
     oek-return proposal /tmp/oek-blocked.md --field blocked
 
-A proposal is a field value, not a request to Olle. The field is one of `outcome`, `next_action`, `blocked`, or `status`. A `status` proposal is exactly `done` or `dropped`. A new proposal supersedes the pending proposal for the same field, so post your current view, not a list of alternatives.
+A proposal is a field value, not a request to Olle. The field is one of `outcome`, `next_action`, `blocked`, `status`, or `title`. A `status` proposal is exactly `done` or `dropped`. A new proposal supersedes the pending proposal for the same field, so post your current view, not a list of alternatives.
+
+## Short title
+
+A task title has at most 50 characters after its area prefix, the part before ` — `. If the task's title is longer, propose a shorter title once, at your first progress milestone. Keep the prefix unchanged.
+
+    printf '%s' "Arrive — Close the Dependabot alerts in agents" > /tmp/oek-title.md
+    oek-return proposal /tmp/oek-title.md --field title
+
+Olle accepts it in Oek, and Oek renames the task file. Never propose a title a second time in the same session.
 
 ## Follow-up
 
