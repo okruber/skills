@@ -104,10 +104,14 @@ Rules for decisions:
 
 Finish only when the task's work is done or Olle ends the session. A plan, a question, or a wait for approval is not the end. When the work is done, do these steps in order:
 
-1. Close the open ends. List every item that is still open: a pull request that waits for a merge or review, a check that only Olle can run, a step for another person, or work you found but did not do. For each item, post an ask when Olle must act, or a follow-up when it is new work. Never leave an open item only in the finish line.
+1. Close the open ends. List every item that is still open: a pull request that waits for a merge or review, a check that only Olle can run, a step for another person, or work you found but did not do. Handle each item:
+   - If this session needs Olle's answer to complete its work, post an ask and wait. Do not finish, because finish expires open asks.
+   - If Olle or another person must act and this session has nothing left to do after that, such as a merge or a live check, update `next_action` to that step in step 2.
+   - If the item is new work, post a follow-up.
+   Never leave an open item only in the finish line.
 2. Update `next_action` and `outcome` from evidence, or propose them.
 3. If Olle stated a status decision, record it with `decision`. If he did not, propose `status` `done` or `dropped`, or propose `blocked` with the reason.
-4. Run `finish` with one line that says where the work stands and names the asks and follow-ups from step 1. It records the final checkpoint and closes the session link, so the session does not show as Unknown in Oek.
+4. Run `finish` with one line that says where the work stands and names the next action and follow-ups from step 1. It records the final checkpoint and closes the session link, so the session does not show as Unknown in Oek.
 
         oek-return finish "Shipped the record loop; live check passed"
 
