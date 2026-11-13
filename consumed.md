@@ -28,14 +28,13 @@ Native pi packages — installed with `pi install`, updated with `pi update --al
 | Package | Provides | Install |
 | --- | --- | --- |
 | `superpowers` | brainstorming, tdd, systematic-debugging, writing-plans, using-git-worktrees, subagent-driven-development, … | `pi install git:github.com/obra/superpowers` |
-| `pi-subagents` | `subagent` tool (chain/parallel/async/forked/resume) — companion superpowers' subagent skills need | `pi install npm:pi-subagents` |
 
 Notes:
 - superpowers ships a `pi` manifest + extension that injects the
   `using-superpowers` bootstrap at session start and after compaction; skills
   are scoped to the package, not dumped into `~/.agents/skills`.
-- Without `pi-subagents`, superpowers' subagent skills degrade to sequential
-  execution in the current session.
+- No subagent package is installed, so superpowers' subagent skills run
+  sequentially in the current session.
 
 ## Via Claude Code plugins (marketplace: `anthropics/claude-plugins-official`)
 

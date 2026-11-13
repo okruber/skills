@@ -6,7 +6,7 @@
 # - Authored skills (this repo) are symlinked into the canonical store so this
 #   git checkout stays the single source of truth.
 #
-# pi packages (superpowers, pi-subagents) are installed here when `pi` is on
+# pi packages (superpowers) are installed here when `pi` is on
 # PATH. Claude Code plugins (superpowers, frontend-design) are NOT handled here
 # — restore them with `/plugin` inside Claude Code. See consumed.md.
 #
@@ -72,7 +72,6 @@ install_git_hook
 if command -v pi >/dev/null 2>&1; then
   echo "==> Installing consumed pi packages"
   pi install git:github.com/obra/superpowers
-  pi install npm:pi-subagents
 else
   echo "==> Skipping pi packages (pi not on PATH); see consumed.md"
 fi
