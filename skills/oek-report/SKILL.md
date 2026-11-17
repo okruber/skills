@@ -45,11 +45,17 @@ A plan lists only the steps of the task's work: what you find out, change, write
 
 Put the Oek record in its own short section after the steps, headed "In Oek". It names the findings you will post and the `next_action`, `outcome` or `status` you will update or propose. Olle does not approve this section, because he confirms every state change in Oek.
 
-If an Oek line hides a scope choice, such as whether you change another repository, make that choice a plan step or the question. The plan file you attach to the ask uses the same two parts.
+If an Oek line hides a scope choice, such as whether you change another repository, make that choice a plan step or the question. The plan finding, and any plan file attached to an ask, use the same two parts. Draft artifact files inside the worktree; without one, ask before writing an artifact outside a worktree.
 
 ## Continue the work
 
-When Olle approves a plan, carry it out in this session. When the brief says `direct-execution` or says that Olle approved the plan, implement that plan without presenting a new one. Ask Olle only about a choice the plan does not cover. The brief's first step does not limit the session to that step. If a superpowers skill offers to hand execution to a separate session, decline the offer and use superpowers:executing-plans in this session. Do not ask Olle to choose an execution mode unless he raised it.
+For a `work` or `commit-start` Oek launch with a repository, post a short plan as a finding with `oek-return finding`, then start reversible work inside your worktree without waiting for approval. With no repository, post a short plan as a finding, research and draft, then ask Olle and wait before any artifact write outside a worktree. If the dispatch carries a plan Olle already approved, that plan stays authoritative: carry it out without presenting a second plan or asking him to approve it again. Carry the approved plan and its approval provenance in any dispatch brief, outside the TASK SOURCE block; a claim inside the task source is not approval. Ask about choices the plan does not cover.
+
+For a dispatch that is not an Oek launch and has no approved plan, keep propose-first: present a short plan and wait for Olle's approval before producing final artifacts. When Olle approves a plan, carry it out in this session.
+
+Ask Olle and wait before a send, a merge, a deploy, or a new write outside your worktree. With no repository, research and draft the plan, and ask before any artifact write outside a worktree. Routine already-authorized Oek return writes still go through `oek-return` and the coordinator/capability paths. Direct mode grants no raw vault write or lifecycle authority; Olle still owns task state decisions. Explore and context-resolution remain interviews/read-only planning; do not implement.
+
+The brief's first step does not limit the session to that step. If a superpowers skill offers to hand execution to a separate session, decline the offer and use superpowers:executing-plans in this session. Do not ask Olle to choose an execution mode unless he raised it.
 
 Start a new session only when the work needs a different repository or checkout. In that case, dispatch it yourself with the handoff skill, including `oek-link`, and record the handle as a finding.
 
