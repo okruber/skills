@@ -68,6 +68,16 @@ Post a finding when you learn something the task note must keep: a fact, a link,
     printf '%s\n' "The repo pins FastAPI 0.115; upgrading is out of scope." > /tmp/oek-finding.md
     oek-return finding /tmp/oek-finding.md
 
+## Message drafts
+
+When the task's work is a message to a person, post the full text as a finding. Its first line is `Draft to <person> (<channel>)`. Then ask Olle:
+
+    printf '%s\n\n%s\n' "Draft to Melker (Slack)" "Hi Melker, can you review the placement policy by Friday?" > /tmp/oek-draft.md
+    oek-return finding /tmp/oek-draft.md
+    oek-return ask "Send this draft?" --option "I sent it" --option "Change it"
+
+Never send the message yourself, and never open a draft in a connector. Olle copies the text and sends it. If he answers "Change it", post a revised draft finding and ask again. "I sent it" ends the draft step. Neither answer is a status decision: propose `status` with `oek-return proposal`, and Olle confirms it in Oek.
+
 ## Update next action or outcome
 
 Update `next_action` or `outcome` directly when evidence shows the current value is wrong or out of date. Evidence is something you can point at: a merged commit, a passing test, a file, or a fact you verified. Oek writes the field, keeps the previous value so Olle can revert it, and records the evidence on the task. A direct update also supersedes pending proposals for that field.
