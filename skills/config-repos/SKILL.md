@@ -26,7 +26,7 @@ Close out the turn in the owning repo:
 cd <repo> && git add -A && git commit -m "<message>" && git push
 ```
 
-Tell Olle you pushed. If he does not want a commit yet, he says so. Otherwise
+Tell the operator you pushed. If the operator does not want a commit yet, the operator says so. Otherwise
 treat commit and push as the default close-out for a config or skill edit.
 
 ## Do not commit
