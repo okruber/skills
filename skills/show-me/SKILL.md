@@ -10,7 +10,7 @@ Answer the current topic as a visual brief. The whole reply has these parts, in 
 
 1. **Title.** One line naming the subject.
 2. **Primary visual.** One code block, chosen from the table below. It carries the explanation. Label nodes with the real names of files, functions, commands, and states.
-3. **Takeaways.** One to three bullets, each one sentence. A takeaway is a reason, a consequence, or an open decision for Olle. A fact already drawn in the visual is not a takeaway, so the first bullet starts from what the visual implies.
+3. **Takeaways.** One to three bullets, each one sentence. A takeaway is a reason, a consequence, or an open decision for the operator. A fact already drawn in the visual is not a takeaway, so the first bullet starts from what the visual implies.
 4. **State line.** Include it only when the subject is a change: `State: proposed | locally implemented | committed | pushed | merged | live`, plus what was verified.
 
 ## Choose the visual

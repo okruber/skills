@@ -2,7 +2,7 @@
 
 **Date:** 2026-06-27
 **Status:** Approved (design) → next: implementation plan
-**Owner:** Olle
+**Owner:** the operator
 **Governs:** the `obsidian-vault-assistant` skill — relocating to omp at `~/.agents/skills/obsidian-vault-assistant/SKILL.md` (see §13) — and the structure of the OEK Vault at
 `/Users/ollekruber/Library/Mobile Documents/iCloud~md~obsidian/Documents/Oek Vault/`
 
@@ -279,7 +279,7 @@ The assistant now runs in **omp**, not pi. omp discovers user skills from `~/.ag
 
 ## 14. Amendment (2026-06-27): clean-slate KB
 
-**Decision (during execution):** Olle judged the 43 legacy notes to be of no particular value. Rather than carry the reconciled legacy graph forward, we took a **clean slate** — directly aligned with Rule IX (*"a small wiki you actually feed beats a beautiful architecture you abandon"*).
+**Decision (during execution):** The operator judged the 43 legacy notes to be of no particular value. Rather than carry the reconciled legacy graph forward, we took a **clean slate** — directly aligned with Rule IX (*"a small wiki you actually feed beats a beautiful architecture you abandon"*).
 
 What changed vs §7/§12:
 - All 55 reconciled notes were moved to `Archive/legacy-knowledge-2026-06-27/` (reversible; nothing deleted; tar backups in `/tmp`).
@@ -299,7 +299,7 @@ What changed vs §7/§12:
 
 **Dispatch modes:** (a) `task` subagent — autonomous/parallel, reports back; (b) fresh `omp` session in the task's repo, seeded by the brief — deep/interactive/cross-project; (c) `/handoff [focus]` then `/resume` — same cwd, go deep then return.
 
-**Completion:** subagent → reports back → mark item done. Scoped session → updates reality (Jira/PR/code) → Olle checks it off. Next sweep files it to `Logs/`.
+**Completion:** subagent → reports back → mark item done. Scoped session → updates reality (Jira/PR/code) → the operator checks it off. Next sweep files it to `Logs/`.
 
 **Automation model (honest):**
 - *Fully automatic:* skill is ambient (never manually invoked); brief generation; `task`-subagent dispatch → report → agenda update.

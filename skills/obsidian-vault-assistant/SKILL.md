@@ -5,7 +5,7 @@ description: "Use when managing the OEK Obsidian vault: capture, task context, p
 
 # OEK Vault Assistant
 
-The vault is Olle's control tower. Keep task operations separate from the `Wiki/` knowledge layer. Durable knowledge belongs in `Wiki/`; transient agendas, checklists, and working notes belong in the task body or `Logs/`.
+The vault is the operator's control tower. Keep task operations separate from the `Wiki/` knowledge layer. Durable knowledge belongs in `Wiki/`; transient agendas, checklists, and working notes belong in the task body or `Logs/`.
 
 Vault path, always quoted:
 
@@ -18,7 +18,7 @@ Vault path, always quoted:
 1. Read `.pi/memory.md`. Keep it short: record a session in a few lines and move superseded entries to `Archive/memory/`.
 2. Report the Oek Work surface: committed work first, then available work.
 3. If Oek is running (`curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8787/api/captures` returns `200`), do not sweep `Inbox.md`, because Oek imports it into its Just in strip. Report the Just in count from that endpoint instead. If Oek is not running and `Inbox.md` has unprocessed capture, classify it and create schema-v2 `available` tasks only when warranted.
-4. Report intake and closures compactly. Closures must reflect explicit actions already taken by Olle in Oek.
+4. Report intake and closures compactly. Closures must reflect explicit actions already taken by the operator in Oek.
 
 ## Task contract
 
@@ -26,7 +26,7 @@ Read [`TASK-SYSTEM.md`](TASK-SYSTEM.md) before editing a task note.
 
 - Statuses are `available | committed | done | dropped`.
 - The assistant may capture, clarify, add context, and create an `available` task using `oek-task create-available`.
-- Only Olle may commit, release, close as done, or drop. He does it in Oek, or he states the decision in a working session that records his words verbatim with `oek-return decision`. Never infer these transitions from a handoff, an Explore run, or a worker result.
+- Only the operator may commit, release, close as done, or drop. The operator does it in Oek, or states the decision in a working session that records the operator's words verbatim with `oek-return decision`. Never infer these transitions from a handoff, an Explore run, or a worker result.
 - `Work` is the daily action surface. `Explore` is non-committing.
 - A worker result is evidence for review, not closure.
 - `size`, `outcome`, and `next_action` are optional enrichment, not gates.
