@@ -99,7 +99,7 @@ Post a proposal when the `blocked` field must change, or when a `next_action` or
     printf '%s' "Waiting on Melker's review of the placement policy." > /tmp/oek-blocked.md
     oek-return proposal /tmp/oek-blocked.md --field blocked
 
-A proposal is a field value, not a request to the operator. The field is one of `outcome`, `next_action`, `blocked`, `status`, or `title`. A `status` proposal is exactly `done` or `dropped`. A new proposal supersedes the pending proposal for the same field, so post your current view, not a list of alternatives.
+A proposal is a field value, not a request to the operator. The field is one of `outcome`, `next_action`, `blocked`, `status`, `title`, or `due`. A `status` proposal is exactly `done` or `dropped`. A new proposal supersedes the pending proposal for the same field, so post your current view, not a list of alternatives.
 
 ## Short title
 
@@ -109,6 +109,15 @@ A task title has at most 50 characters after its area prefix, the part before ` 
     oek-return proposal /tmp/oek-title.md --field title
 
 The operator accepts it in Oek, and Oek renames the task file. Never propose a title a second time in the same session.
+
+## Due date
+
+If your task has no `Due:` line in the brief and no pending `due` proposal, propose a due date when you learn a real one. A real date is one that a person or a source states: a deadline in the task note, a meeting date, an external release, or a date the operator gave. Propose it once, as soon as you know it.
+
+    printf '%s' "2026-11-27" > /tmp/oek-due.md
+    oek-return proposal /tmp/oek-due.md --field due
+
+The value is one date, `YYYY-MM-DD`, in the operator's time zone: the day the work must be done. Post a finding in the same step that names where the date comes from. Never invent a date: no date is a valid answer. Never use a due date to ask for approval or to hurry the operator. If the task has a due date and evidence shows it changed, propose the new date. `due` is never an update field. You propose due dates only for your own task.
 
 ## Follow-up
 
