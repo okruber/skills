@@ -99,7 +99,7 @@ Post a proposal when the `blocked` field must change, or when a `next_action` or
     printf '%s' "Waiting on Melker's review of the placement policy." > /tmp/oek-blocked.md
     oek-return proposal /tmp/oek-blocked.md --field blocked
 
-A proposal is a field value, not a request to the operator. The field is one of `outcome`, `next_action`, `blocked`, `status`, `title`, or `due`. A `status` proposal is exactly `done` or `dropped`. A new proposal supersedes the pending proposal for the same field, so post your current view, not a list of alternatives.
+A proposal is a field value, not a request to the operator. The field is one of `outcome`, `next_action`, `blocked`, `status`, `title`, `due`, or `initiative`. A `status` proposal is exactly `done` or `dropped`. A new proposal supersedes the pending proposal for the same field, so post your current view, not a list of alternatives.
 
 ## Short title
 
@@ -118,6 +118,16 @@ If your task has no `Due:` line in the brief and no pending `due` proposal, prop
     oek-return proposal /tmp/oek-due.md --field due
 
 The value is one date, `YYYY-MM-DD`, in the operator's time zone: the day the work must be done. Post a finding in the same step that names where the date comes from. Never invent a date: no date is a valid answer. Never use a due date to ask for approval or to hurry the operator. If the task has a due date and evidence shows it changed, propose the new date. `due` is never an update field. You propose due dates only for your own task.
+
+## Initiative
+
+An initiative groups the tasks that serve one goal, for example "Anthropic partnership". The brief shows `Initiative: <name>` when your task has one, and `Initiatives in <area>:` with the names that exist.
+
+If your task has no `Initiative:` line and no pending `initiative` proposal, propose one once, at your first progress milestone, when the task clearly serves a goal that other tasks share. Use a name from `Initiatives in <area>:` when one fits. Propose a new name only when none fits and at least one other open task you know of serves the same goal.
+
+    oek-return proposal "Agent infrastructure" --field initiative
+
+The value is the name alone: one line, at most 40 characters, in the words of the task notes. Post a finding in the same step that names the tasks that share the goal. No initiative is a valid answer. Never propose an initiative to ask for approval. You propose an initiative only for your own task. The operator confirms every proposal.
 
 ## Follow-up
 
