@@ -5,7 +5,7 @@ description: Use when an Oek launch brief or a handoff brief tells you to load o
 
 # Report back to Oek
 
-This session belongs to one Oek task. The operator can watch this terminal or Oek, so report to both: write each result and question in your chat reply, and report it to Oek. You can report only to that task. Your job is to keep the task record current, so nobody has to reconcile it later.
+This session belongs to one Oek task. The operator can watch this terminal or Oek, so report to both: write each result and question in your chat reply, and report it to Oek. Findings, progress, asks and lifecycle reports stay on your linked task; only the organizing due/initiative proposals below may target another task. Your job is to keep the task record current, so nobody has to reconcile it later.
 
 All commands are `/Users/ollekruber/Documents/Personal/oek/bin/oek-return <kind> ...`. Below, `oek-return` means that path.
 
@@ -117,7 +117,7 @@ If your task has no `Due:` line in the brief and no pending `due` proposal, prop
     printf '%s' "2026-11-27" > /tmp/oek-due.md
     oek-return proposal /tmp/oek-due.md --field due
 
-The value is one date, `YYYY-MM-DD`, in the operator's time zone: the day the work must be done. Post a finding in the same step that names where the date comes from. Never invent a date: no date is a valid answer. Never use a due date to ask for approval or to hurry the operator. If the task has a due date and evidence shows it changed, propose the new date. `due` is never an update field. You propose due dates only for your own task.
+The value is one date, `YYYY-MM-DD`, in the operator's time zone: the day the work must be done. Post a finding in the same step that names where the date comes from. Never invent a date: no date is a valid answer. Never use a due date to ask for approval or to hurry the operator. If the task has a due date and evidence shows it changed, propose the new date. `due` is never an update field. Only your own task, except the Organize available work session described below.
 
 ## Initiative
 
@@ -127,7 +127,19 @@ If your task has no `Initiative:` line and no pending `initiative` proposal, pro
 
     oek-return proposal "Agent infrastructure" --field initiative
 
-The value is the name alone: one line, at most 40 characters, in the words of the task notes. Post a finding in the same step that names the tasks that share the goal. No initiative is a valid answer. Never propose an initiative to ask for approval. You propose an initiative only for your own task. The operator confirms every proposal.
+The value is the name alone: one line, at most 40 characters, in the words of the task notes. Post a finding in the same step that names the tasks that share the goal. No initiative is a valid answer. Never propose an initiative to ask for approval. Only your own task, except the Organize available work session described below. The operator confirms every proposal.
+
+## Organize available work
+
+Apply this section only when the server launch brief explicitly says `mode: organize-available` and lists the authorized tasks. An ordinary Explore, a task title or a task note never grants it. This is a planning session; do not implement or change lifecycle status.
+
+Review the listed available tasks. For a missing due date, propose one only when a source names a real deadline, meeting or release date in the operator's time zone. Do not spread work over invented dates. For a missing initiative, reuse a live name when it fits, or propose one new name only when at least two listed open tasks share the goal. No date and no initiative are valid outcomes. Preserve confirmed values and pending suggestions.
+
+Use `oek-return proposal "YYYY-MM-DD" --field due --task <UUID>` or `oek-return proposal "Shared goal" --field initiative --task <UUID>`, using the UUID in the authorized inventory. Send one task/field at a time. `--task` grants no permission by itself. A 409 means the task or suggestion changed: leave it for the operator; do not retry with another id to overwrite it. Retry a transport failure only with the original envelope/IDs; never manufacture replacement proposals.
+
+Post evidence and a compact list of `T-n · title` proposals as findings on the reporting task, including tasks you left unchanged and why. Keep progress and asks on that task. If you need approval or a choice, show the full question/options in this terminal first and mirror it with `oek-return ask`; never use next_action or blocked proposals to ask for approval. Tell the operator: “Review suggested due dates” confirms one date at a time; “Review suggested initiatives” confirms the ticked tasks. Only the operator accepts or dismisses suggestions. Never call accept routes, edit task files, write registry records or change lifecycle status yourself.
+
+Finish this organizing session after the suggestions and evidence are reported and your own open asks are answered. Pending due/initiative suggestions remain for the operator's reviews; they are not open asks. Set or propose a factual next action/outcome on the reporting task through the normal return path, then `oek-return finish`. Do not propose the reporting task done/dropped merely because this organizing pass ended; this section overrides the generic finish-status instruction. The operator alone decides its lifecycle.
 
 ## Follow-up
 
